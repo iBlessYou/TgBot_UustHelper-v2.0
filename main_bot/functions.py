@@ -56,7 +56,7 @@ def import_lists_from_db(values_list):
     con.commit(); con.close()
     return lists
 
-def register_user(chat_id, username, first_name, last_name, users_list, sorted_data_orders):
+def register_user(chat_id, username, first_name, last_name, users_list):
     con, cur = connection()
     cur.execute(f'SELECT EXISTS (SELECT 1 FROM public."Users" WHERE chat_id = %s)', (chat_id,))
     exists = cur.fetchone()[0] == 1
@@ -65,8 +65,10 @@ def register_user(chat_id, username, first_name, last_name, users_list, sorted_d
                     (username, first_name, last_name, chat_id))
     else:
         users_list[chat_id] = classes.User(username, first_name, last_name, None, datetime.date, classes.Config, classes.OtherData)
-        cur.execute('INSERT INTO public."Users" (chat_id, username, first_name, last_name, config, other_data) VALUES (%s, %s, %s, %s, %s, %s)',
-            (chat_id, username, first_name, last_name, classes.Config.class_to_json(), classes.OtherData.class_to_json()))
+        cur.execute('INSERT INTO public."Users" (chat_id, username, first_name, last_name, date_reg, config, other_data) VALUES (%s, %s, %s, %s, %s, %s, %s)',
+            (chat_id, username, first_name, last_name, datetime.date, classes.Config.class_to_json(), classes.OtherData.class_to_json()))
+        cur.execute(f'SELECT data FROM public."Sorted_Data" WHERE object = %s', ("orders",))
+        sorted_data_orders = cur.fetchall()[0][0]
         sorted_data_orders["chat_id"][chat_id] = []
         cur.execute(f'UPDATE public."Sorted_Data" SET data = %s WHERE object = %s',
                     (json.dumps(sorted_data_orders), "orders"))

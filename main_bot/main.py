@@ -18,9 +18,7 @@ bot = Bot(token=config.token_mainbot)
 reshalbot = Bot(token=config.token_reshalbot)
 dp = Dispatcher()
 
-users_list, sorted_data_orders = functions.import_lists_from_db(["users_list", "sorted_data_orders_list"])
-"""print(users_list[1328304100].config.instance_to_object())"""
-print(sorted_data_orders)
+users_list, = functions.import_lists_from_db(["users_list"])
 
 #   СТАРТ
 @dp.message(CommandStart())
@@ -34,7 +32,7 @@ async def start(message: Message):
     await message.delete()
     await message.answer_photo(bg_photo_id, content.text_start(message.from_user.first_name), reply_markup=markup.as_markup())
 
-    functions.register_user(message.chat.id, message.from_user.username, message.from_user.first_name, message.from_user.last_name, users_list, sorted_data_orders)
+    functions.register_user(message.chat.id, message.from_user.username, message.from_user.first_name, message.from_user.last_name, users_list)
 
 @dp.callback_query(Callback_Data.filter(F.key == "year_confirmation"))
 async def callback(callback: CallbackQuery, callback_data: Callback_Data):

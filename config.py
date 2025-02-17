@@ -13,6 +13,8 @@ class DataBaseConnection:
 postgresql_config = DataBaseConnection()
 
 chat_id_access_list=[1328304100, 7446688671]
+username_access_list=["BlessYou_GG"]
+
 
 boss_username = "BlessYou_GG"
 boss_chat_id = 1328304100
