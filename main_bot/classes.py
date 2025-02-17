@@ -5,9 +5,17 @@ from datetime import datetime
 from dataclasses import dataclass
 from aiogram.filters.callback_data import CallbackData
 
+from aiogram.fsm.state import State, StatesGroup
+
 class Callback_Data(CallbackData, prefix="my"):
     key: str
     value: str
+
+class Form(StatesGroup):
+    login = State()
+    password = State()
+    manual_file = State()
+    additional_info = State()
 
 class OrderHistoryFilters:
     def __init__(self):
@@ -72,6 +80,23 @@ class User:
         self.other_data = other_data
 
 
+class Order:
+    def __init__(self, chat_id, username, year, subject, subject_name, work, work_name, work_id, work_id_name, date_reg, status, price, executor_chat_id, executor_username, specific_data):
+        self.chat_id = chat_id
+        self.username = username
+        self.year = year
+        self.subject = subject
+        self.subject_name = subject_name
+        self.work = work
+        self.work_name = work_name
+        self.work_id = work_id
+        self.work_id_name = work_id_name
+        self.date_reg = date_reg
+        self.status = status
+        self.price = price
+        self.executor_chat_id = executor_chat_id
+        self.executor_username = executor_username
+        self.specific_data = specific_data
 
 
 
