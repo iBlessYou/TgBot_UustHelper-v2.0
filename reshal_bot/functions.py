@@ -71,7 +71,7 @@ def register_executor(chat_id, username, first_name, last_name, executors_list):
         cur.execute('UPDATE public."Executors" SET username=%s, first_name=%s, last_name=%s WHERE chat_id = %s',
                     (username, first_name, last_name, chat_id))
     else:
-        executors_list[chat_id] = classes.Executor(username, first_name, last_name, datetime.date, classes.Config, classes.OtherData)
+        executors_list[chat_id] = classes.Executor(username, first_name, last_name, datetime.date, classes.Config(), classes.OtherData())
         cur.execute('INSERT INTO public."Executors" (chat_id, username, first_name, last_name, config, other_data) VALUES (%s, %s, %s, %s, %s, %s)',
             (chat_id, username, first_name, last_name, classes.Config.class_to_json(), classes.OtherData.class_to_json()))
         cur.execute(f'SELECT data FROM public."Sorted_Data" WHERE object = %s', ("orders",))

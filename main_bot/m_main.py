@@ -20,6 +20,7 @@ dp = Dispatcher()
 
 users_list, = functions.import_lists_from_db(["users_list"])
 
+
 #   СТАРТ
 @dp.message(CommandStart())
 async def start(message: Message):
@@ -48,7 +49,7 @@ async def callback(callback: CallbackQuery, callback_data: Callback_Data):
 
     users_list[callback.message.chat.id].other_data.message_id = callback.message.message_id
     users_list[callback.message.chat.id].year = year
-    db_connection.sql_UPDATE('public."Users"', "chat_id", callback.message.chat.id, ["year", "other_data"], *[year, users_list[callback.message.chat.id].other_data.class_to_json()])
+    db_connection.sql_UPDATE('public."Users"', "chat_id", callback.message.chat.id, ["year", "other_data"], *[year, users_list[callback.message.chat.id].other_data.instance_to_json()])
 
 @dp.callback_query(Callback_Data.filter(F.key == "start"))
 async def start(callback: CallbackQuery):
@@ -159,6 +160,7 @@ async def callback(callback: CallbackQuery):
 
 @dp.callback_query(Callback_Data.filter(F.key == "order_history_filters"))
 async def callback(callback: CallbackQuery, callback_data=Callback_Data):
+
     filters = classes.OrderHistoryFilters()
     parameter = callback_data.value.split("_")[0]
     argument = callback_data.value.split("_")[1]
@@ -190,6 +192,7 @@ async def callback(callback: CallbackQuery, callback_data=Callback_Data):
     users_list[callback.message.chat.id].config.order_history_filters = data
 
     db_connection.sql_UPDATE('public."Users"', "chat_id", callback.message.chat.id, ["config"], *[users_list[callback.message.chat.id].config.instance_to_json()])
+
 
 @dp.callback_query(Callback_Data.filter(F.key == "order"))
 async def callback(callback: CallbackQuery, callback_data: Callback_Data):
@@ -380,13 +383,17 @@ async def callback(callback: CallbackQuery):
     price = main_registry_list[year][subject]["work"]["sdo"]["price"]
     work_id, work_id_name = None, None
     status = "begin"
+    executor_chat_id = main_registry_list[year][subject]["work"]["sdo"]["executors"][0]
+    main_registry_list[year][subject]["work"]["sdo"]["executors"].pop(0)
+    main_registry_list[year][subject]["work"]["sdo"]["executors"].append(executor_chat_id)
+    executor_username = db_connection.sql_SELECT('public."Executors"', "chat_id", executor_chat_id, ["username", ])[0][0]
 
     con, cur = functions.connection()
     specific_data = {}
     functions.import_in_object(specific_data, ["platform", "login", "password", "file_path"], [platform, login, password, None])
 
-    cur.execute('INSERT INTO public."Orders" (chat_id, username, year, subject, subject_name, work, work_name, work_id, work_id_name, specific_data, status, price)'
-    'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',(chat_id, username, year, subject, subject_name, work, work_name, work_id, work_id_name, json.dumps(specific_data), status, price))
+    cur.execute('INSERT INTO public."Orders" (chat_id, username, year, subject, subject_name, work, work_name, work_id, work_id_name, specific_data, status, price, executor_chat_id, executor_username)'
+    'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',(chat_id, username, year, subject, subject_name, work, work_name, work_id, work_id_name, json.dumps(specific_data), status, price, executor_chat_id, executor_username))
     cur.execute('SELECT order_id FROM public."Orders" ORDER BY order_id DESC LIMIT 1;')
     order_id = cur.fetchall()[0][0]
     cur.execute('SELECT data FROM public."Sorted_Data" WHERE object = %s', ("orders",))
@@ -394,11 +401,13 @@ async def callback(callback: CallbackQuery):
     sorted_data["chat_id"][str(chat_id)].append(order_id)
     sorted_data["status"]["begin"].append(order_id)
     sorted_data["work"]["sdo"].append(order_id)
+    sorted_data["executor_chat_id"][str(executor_chat_id)].append(order_id)
     cur.execute('UPDATE public."Sorted_Data" SET data = %s WHERE object = %s', (json.dumps(sorted_data), "orders"))
+    cur.execute('UPDATE public."Registry_Data" SET data = %s WHERE registry_name = %s', (json.dumps(main_registry_list), "main_registry"))
     con.commit(); con.close()
 
     markup = InlineKeyboardBuilder()
-    markup.button(text="💬 Связаться с исполнителем", url=f"https://t.me/{config.boss_username}")
+    markup.button(text="💬 Связаться с исполнителем", url=f"https://t.me/{executor_username}")
     markup.button(text="На главную", callback_data=Callback_Data(key="main", value="")); markup.adjust(1)
 
     await callback.message.edit_caption(caption=content.text_order_SDO_3(order_id, chat_id, username, year, subject_name, platform, login, password), reply_markup=markup.as_markup(), parse_mode="html")
@@ -523,6 +532,10 @@ async def call(callback: CallbackQuery):
     work_id_name = main_registry_list[year][subject]["work"]["lab"]["work_id"][work_id]["work_id_name"]
     price = main_registry_list[year][subject]["work"]["lab"]["work_id"][work_id]["price"]
     status = "begin"
+    executor_chat_id = main_registry_list[year][subject]["work"]["lab"]["work_id"][work_id]["executors"][0]
+    main_registry_list[year][subject]["work"]["lab"]["work_id"][work_id]["executors"].pop(0)
+    main_registry_list[year][subject]["work"]["lab"]["work_id"][work_id]["executors"].append(executor_chat_id)
+    executor_username = db_connection.sql_SELECT('public."Executors"', "chat_id", executor_chat_id, ["username",])[0][0]
 
 
     if len(users_list[callback.message.chat.id].other_data.temporary_data) == 5:
@@ -547,20 +560,22 @@ async def call(callback: CallbackQuery):
     functions.import_in_object(specific_info, ["manual_file_path", "manual_file_name", "additional_info", "file_path"],
                              [manual_file_path, manual_file_name, additional_info, None])
 
-    cur.execute('INSERT INTO public."Orders" (chat_id, username, year, subject, subject_name, work, work_name, work_id, work_id_name, specific_data, status, price)'
-    'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',(chat_id, username, year, subject, subject_name, work, work_name, work_id, work_id_name, json.dumps(specific_info), status, price))
+    cur.execute('INSERT INTO public."Orders" (chat_id, username, year, subject, subject_name, work, work_name, work_id, work_id_name, specific_data, status, price, executor_chat_id, executor_username)'
+    'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',(chat_id, username, year, subject, subject_name, work, work_name, work_id, work_id_name, json.dumps(specific_info), status, price, executor_chat_id, executor_username))
     cur.execute('SELECT order_id FROM public."Orders" ORDER BY order_id DESC LIMIT 1;')
     order_id = cur.fetchall()[0][0]
     cur.execute(f'SELECT data FROM public."Sorted_Data" WHERE object = %s', ("orders",))
     sorted_data = cur.fetchall()[0][0]
     sorted_data["status"]["begin"].append(order_id)
     sorted_data["chat_id"][str(chat_id)].append(order_id)
+    sorted_data["executor_chat_id"][str(executor_chat_id)].append(order_id)
     sorted_data["work"]["lab"].append(order_id)
     cur.execute('UPDATE public."Sorted_Data" SET data = %s WHERE object = %s', (json.dumps(sorted_data), "orders"))
+    cur.execute('UPDATE public."Registry_Data" SET data = %s WHERE registry_name = %s', (json.dumps(main_registry_list), "main_registry"))
     con.commit(); con.close()
 
     markup = InlineKeyboardBuilder()
-    markup.button(text="💬 Связаться с исполнителем", url=f"https://t.me/{config.boss_username}")
+    markup.button(text="💬 Связаться с исполнителем", url=f"https://t.me/{executor_username}")
     markup.button(text="На главную", callback_data=Callback_Data(key="main", value="")); markup.adjust(1)
 
     await callback.message.edit_caption(caption=content.text_order_lab_3(order_id, chat_id, username, year, subject_name, work_id, work_id_name, manual_file_name), reply_markup=markup.as_markup(), parse_mode="html")

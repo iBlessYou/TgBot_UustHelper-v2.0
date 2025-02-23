@@ -1,3 +1,4 @@
+import copy
 import json
 
 from db_connection import connection
@@ -25,6 +26,7 @@ class OrderHistoryFilters:
 class SelectedServices:
     def __init__(self):
         self.current = {}
+        self.new = {}
         self.append = {}
         self.remove = {}
 
@@ -40,13 +42,14 @@ class Config:
     order_history_filters = OrderHistoryFilters()
 
     def __init__(self):
-        self.selected_services = Config.selected_services
-        self.order_filters = Config.order_filters
-        self.order_history_filters = Config.order_history_filters
+        self.selected_services = SelectedServices()
+        self.order_filters = OrderFilters()
+        self.order_history_filters = OrderHistoryFilters()
 
-    def instance_to_object(self):
-        return {"selected_services": {
+    def instance_to_json(self):
+        data = {"selected_services": {
             "current": self.selected_services.current,
+            "new": self.selected_services.new,
             "append": self.selected_services.append,
             "remove": self.selected_services.remove
             },
@@ -59,11 +62,12 @@ class Config:
             "status": self.order_history_filters.status
             }
         }
-
+        return json.dumps(data)
     @classmethod
-    def class_to_object(cls):
-        return {"selected_services": {
+    def class_to_json(cls):
+        data = {"selected_services": {
             "current": cls.selected_services.current,
+            "new": cls.selected_services.new,
             "append": cls.selected_services.append,
             "remove": cls.selected_services.remove
             },
@@ -76,12 +80,7 @@ class Config:
             "status": cls.order_history_filters.status
             }
         }
-
-    def instance_to_json(self):
-        return json.dumps(self.instance_to_object())
-    @classmethod
-    def class_to_json(cls):
-        return json.dumps(cls.class_to_object())
+        return json.dumps(data)
 
 class OtherData:
     temporary_data = []
@@ -92,20 +91,17 @@ class OtherData:
         self.bg_photo_id = OtherData.bg_photo_id
         self.message_id = OtherData.message_id
 
-    def instance_to_object(self):
-        return {"temporary_data": self.temporary_data,
+    def instance_to_json(self):
+        data = {"temporary_data": self.temporary_data,
                 "bg_photo_id": self.bg_photo_id,
                 "message_id": self.message_id}
-    @classmethod
-    def class_to_object(cls):
-        return {"temporary_data": cls.temporary_data,
-                "bg_photo_id": cls.bg_photo_id,
-                "message_id": cls.message_id}
-    def instance_to_json(self):
-        return json.dumps(self.instance_to_object())
+        return json.dumps(data)
     @classmethod
     def class_to_json(cls):
-        return json.dumps(cls.class_to_object())
+        data = {"temporary_data": cls.temporary_data,
+                "bg_photo_id": cls.bg_photo_id,
+                "message_id": cls.message_id}
+        return json.dumps(data)
 
 
 class Order:
@@ -132,8 +128,8 @@ class Executor:
         self.first_name = first_name
         self.last_name = last_name
         self.date_reg = date_reg
-        self.config = config
-        self.other_data = other_data
+        self.config = copy.deepcopy(config)
+        self.other_data = copy.deepcopy(other_data)
 
 
 

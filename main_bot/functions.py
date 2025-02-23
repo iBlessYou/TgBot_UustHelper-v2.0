@@ -12,12 +12,13 @@ def import_lists_from_db(values_list):
         cur.execute('SELECT * FROM public."Users"')
         users_table = cur.fetchall()
         users_list = {}
+
         for row in users_table:
             config = classes.Config()
+            other_data = classes.OtherData()
             config.order_history_filters.work = row[6]["order_history_filters"]["work"]
             config.order_history_filters.status = row[6]["order_history_filters"]["status"]
 
-            other_data = classes.OtherData()
             other_data.temporary_data = row[7]["temporary_data"]
             other_data.bg_photo_id = row[7]["bg_photo_id"]
             other_data.message_id = row[7]["message_id"]
@@ -64,9 +65,9 @@ def register_user(chat_id, username, first_name, last_name, users_list):
         cur.execute('UPDATE public."Users" SET username=%s, first_name=%s, last_name=%s WHERE chat_id = %s',
                     (username, first_name, last_name, chat_id))
     else:
-        users_list[chat_id] = classes.User(username, first_name, last_name, None, datetime.date, classes.Config, classes.OtherData)
+        users_list[chat_id] = classes.User(username, first_name, last_name, None, None, classes.Config(), classes.OtherData())
         cur.execute('INSERT INTO public."Users" (chat_id, username, first_name, last_name, date_reg, config, other_data) VALUES (%s, %s, %s, %s, %s, %s, %s)',
-            (chat_id, username, first_name, last_name, datetime.date, classes.Config.class_to_json(), classes.OtherData.class_to_json()))
+            (chat_id, username, first_name, last_name, None, classes.Config.class_to_json(), classes.OtherData.class_to_json()))
         cur.execute(f'SELECT data FROM public."Sorted_Data" WHERE object = %s', ("orders",))
         sorted_data_orders = cur.fetchall()[0][0]
         sorted_data_orders["chat_id"][chat_id] = []
