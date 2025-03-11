@@ -144,13 +144,13 @@ def send_status_text_user(status):
     return status_text
 
 
-def order_info_user(order_id, chat_id, year, subject_name, work, work_name, work_id_name, specific_data, status, markup):
+def order_info_user(order_id, chat_id, year, subject_name, work, work_name, work_id, work_id_name, specific_data, status, markup):
     markup.button(text="Скрыть",  callback_data=classes.Callback_Data(key="delete", value=""))
     if work == "lab":
 
         manual_file_path, manual_file_name = specific_data["manual_file_path"], specific_data["manual_file_name"]
         text = f"{send_status_text_user(status)}\nЗаказ № {order_id}: {work_name}\n\n"
-        text += f"ℹ️Детали заказа:\n • Курс: {year}\n • Предмет: {subject_name}\n • Название ЛР: {work_id_name}\n • Название архива/документа: {manual_file_name}"
+        text += f"ℹ️Детали заказа:\n • Курс: {year}\n • Предмет: {subject_name}\n • Номер ЛР: {work_id}\n • Название ЛР: {work_id_name}\n • Название архива/документа: {manual_file_name}"
         if status == "begin":
             text += ("\n\nCвяжитесь с менеджером для получения инструкций по оплате. "
                      "Для этого нажмите 💬 Связаться с менеджером, после чего вас перекинет в личный чат с менеджером, "
@@ -168,7 +168,7 @@ def order_info_user(order_id, chat_id, year, subject_name, work, work_name, work
     if work == "sdo":
         platform, login, password = specific_data["platform"], specific_data["login"], specific_data["password"]
         text = f"{send_status_text_user(status)}\nЗаказ № {order_id}: {work_name}\n\n"
-        text += f"ℹ️Детали заказа:\n • Курс: {year}\n • Предмет: {subject_name}\n • Платформа: {platform}\n • Логин: {login}\n • Пароль: {password}"
+        text += f"ℹ️Детали заказа:\n • Курс: {year}\n • Предмет: {subject_name}\n • Номер теста: {work_id}\n • Название теста: {work_id_name}\n • Платформа: {platform}\n • Логин: {login}\n • Пароль: {password}"
         if status == "begin":
             text += ("\n\nCвяжитесь с менеджером для получения инструкций по оплате. "
                      "Для этого нажмите 💬 Связаться с менеджером, после чего вас перекинет в личный чат с менеджером, "

@@ -198,12 +198,12 @@ async def callback(callback: CallbackQuery, callback_data=Callback_Data):
 async def callback(callback: CallbackQuery, callback_data: Callback_Data):
     orders_list, = functions.import_lists_from_db(["orders_list"])
     order_id = int(callback_data.value)
-    chat_id, username, year, subject_name, work, work_name, work_id_name, specific_data, status = functions.retrieve_from_instance(
+    chat_id, username, year, subject_name, work, work_name, work_id, work_id_name, specific_data, status = functions.retrieve_from_instance(
         orders_list[order_id],
-        ["chat_id", "username", "year", "subject_name", "work", "work_name", "work_id_name", "specific_data",
+        ["chat_id", "username", "year", "subject_name", "work", "work_name", "work_id", "work_id_name", "specific_data",
          "status"])
     markup = InlineKeyboardBuilder()
-    text, markup, file_path = functions.order_info_user(order_id, chat_id, year, subject_name, work, work_name,
+    text, markup, file_path = functions.order_info_user(order_id, chat_id, year, subject_name, work, work_name, work_id,
                                                         work_id_name, specific_data, status, markup)
     markup.adjust(1)
 
@@ -252,20 +252,14 @@ async def callback(callback: CallbackQuery, callback_data=Callback_Data):
                 text += f"✅ {work_name}     <b><em>{min_price} р.</em></b>\n\n"
             else:
                 text += f"✅ {work_name}     <b><em>{min_price}-{max_price} р.</em></b>\n\n"
-            markup.button(text=work_name, callback_data=Callback_Data(key="lab_ids", value=f"{subject}_{work}"))
-
-        elif active_registry_list[year][subject][work] == {}:
-            price = main_registry_list[year][subject]["work"][work]["price"]
-            text += f"✅ {work_name}     <b><em>{price} р.</em></b>\n\n"
-            markup.button(text=work_name, callback_data=Callback_Data(key=f"order_{work}", value=f"{subject}"))
-
+            markup.button(text=work_name, callback_data=Callback_Data(key="work_ids", value=f"{subject}_{work}"))
 
     markup.button(text="⬅️ Назад", callback_data=Callback_Data(key="subjects", value="")); markup.adjust(1)
     text += "\n❗ Чтобы начать оформление, выберите нужную услугу."
 
     await callback.message.edit_caption(caption=text, reply_markup=markup.as_markup(), parse_mode="HTML")
 
-@dp.callback_query(Callback_Data.filter(F.key=="lab_ids"))
+@dp.callback_query(Callback_Data.filter(F.key=="work_ids"))
 async def callback(callback: CallbackQuery, callback_data: Callback_Data):
     year = users_list[callback.message.chat.id].year
     subject = callback_data.value.split("_")[0]
@@ -290,10 +284,11 @@ async def callback(callback: CallbackQuery, callback_data: Callback_Data):
         #   ИНФО
 @dp.callback_query(Callback_Data.filter(F.key=="order_sdo"))
 async def callback(callback: CallbackQuery, callback_data: Callback_Data):
-    subject = callback_data.value
+    subject = callback_data.value.split("_")[0]
+    work_id = callback_data.value.split("_")[1]
 
     markup = InlineKeyboardBuilder()
-    markup.button(text="➡️ Перейти к оформлению", callback_data=Callback_Data(key=f"order_sdo_1-1", value=f"{subject}"))
+    markup.button(text="➡️ Перейти к оформлению", callback_data=Callback_Data(key=f"order_sdo_1-1", value=f"{subject}_{work_id}"))
     markup.button(text="⬅️ Назад", callback_data=Callback_Data(key="services", value=f"{subject}")); markup.adjust(1)
 
     await callback.message.edit_caption(caption=content.text_order_SDO, reply_markup=markup.as_markup())
@@ -301,44 +296,45 @@ async def callback(callback: CallbackQuery, callback_data: Callback_Data):
         #   ПЕРЕЙТИ К ОФОРМЛЕНИЮ
 @dp.callback_query(Callback_Data.filter(F.key=="order_sdo_1-1"))
 async def callback(callback: CallbackQuery, callback_data: Callback_Data):
-    subject = callback_data.value
+    subject = callback_data.value.split("_")[0]
+    work_id = callback_data.value.split("_")[1]
 
     markup = InlineKeyboardBuilder()
     markup.button(text="СДО", callback_data=Callback_Data(key="order_sdo_1-2", value="СДО"))
     markup.button(text="ИСУ", callback_data=Callback_Data(key="order_sdo_1-2", value="ИСУ"))
-    markup.button(text="❌ Отмена", callback_data=Callback_Data(key=f"order_sdo", value=f"{subject}")); markup.adjust(2, 1)
+    markup.button(text="❌ Отмена", callback_data=Callback_Data(key=f"order_sdo", value=f"{subject}_{work_id}")); markup.adjust(2, 1)
 
     await callback.message.edit_caption(caption=content.text_order_SDO_1_1, reply_markup=markup.as_markup())
 
-    functions.register_temporary_data(callback.message.chat.id, [subject], [0], users_list)
+    functions.register_temporary_data(callback.message.chat.id, [subject, work_id], [0, 1], users_list)
 
         #   ВЫБОР ПЛАТФОРМЫ
 @dp.callback_query(Callback_Data.filter(F.key=="order_sdo_1-2"))
 async def callback(callback: CallbackQuery, callback_data: Callback_Data):
     platform = callback_data.value
-    year = users_list[callback.message.chat.id].year
     subject = users_list[callback.message.chat.id].other_data.temporary_data[0]
+    work_id = users_list[callback.message.chat.id].other_data.temporary_data[1]
 
     markup = InlineKeyboardBuilder()
     markup.button(text="✅ Далее", callback_data=Callback_Data(key=f"order_sdo_2", value=""))
-    markup.button(text="🔄 Изменить", callback_data=Callback_Data(key=f"order_sdo_1-1", value=f"{subject}_{year}"))
-    markup.button(text="❌ Отмена", callback_data=Callback_Data(key=f"order_sdo", value=f"{subject}_{year}")); markup.adjust(2, 1)
+    markup.button(text="🔄 Изменить", callback_data=Callback_Data(key=f"order_sdo_1-1", value=f"{subject}_{work_id}"))
+    markup.button(text="❌ Отмена", callback_data=Callback_Data(key=f"order_sdo", value=f"{subject}_{work_id}")); markup.adjust(2, 1)
 
     await callback.message.edit_caption(caption=content.text_order_SDO_1_2(platform), reply_markup=markup.as_markup())
 
-    functions.register_temporary_data(callback.message.chat.id, [platform], [1], users_list)
+    functions.register_temporary_data(callback.message.chat.id, [platform], [2], users_list)
 
     #   ВВЕСТИ ЛОГИН, ПАРОЛЬ
 @dp.callback_query(Callback_Data.filter(F.key == "order_sdo_2"))
 async def callback(callback: CallbackQuery, state: FSMContext):
-    platform = users_list[callback.message.chat.id].other_data.temporary_data[1]
+    platform = users_list[callback.message.chat.id].other_data.temporary_data[2]
 
     await state.set_state(classes.Form.login)
     await callback.message.edit_caption(caption=content.text_order_SDO_2_1(platform))
 
 @dp.message(classes.Form.login)
 async def message(message: Message, state: FSMContext):
-    platform = users_list[message.chat.id].other_data.temporary_data[1]
+    platform = users_list[message.chat.id].other_data.temporary_data[2]
 
     message_id = users_list[message.chat.id].other_data.message_id
 
@@ -347,29 +343,30 @@ async def message(message: Message, state: FSMContext):
     await message.delete()
     await bot.edit_message_caption(caption=content.text_order_SDO_2_2(platform), chat_id=message.chat.id, message_id=message_id)
 
-    functions.register_temporary_data(message.chat.id, [message.text], [2], users_list)
+    functions.register_temporary_data(message.chat.id, [message.text], [3], users_list)
 
 @dp.message(classes.Form.password)
 async def message(message: Message, state: FSMContext):
     main_registry_list, = functions.import_lists_from_db(["main_registry_list"])
     message_id = users_list[message.chat.id].other_data.message_id
     year = users_list[message.chat.id].year
-    subject, platform, login = functions.retrieve_temporary_data(message.chat.id, [0, 1, 2], users_list)
+    subject, work_id, platform, login = functions.retrieve_temporary_data(message.chat.id, [0, 1, 2, 3], users_list)
     subject_name = main_registry_list[year][subject]["subject_name"]
-    price = main_registry_list[year][subject]["work"]["sdo"]["price"]
+    work_id_name = main_registry_list[year][subject]["work"]["sdo"]["work_id"][work_id]["work_id_name"]
+    price = main_registry_list[year][subject]["work"]["sdo"]["work_id"][work_id]["price"]
     password = message.text
 
     markup = InlineKeyboardBuilder()
     markup.button(text="✅ Сформировать заказ", callback_data=Callback_Data(key=f"order_sdo_3", value=""))
-    markup.button(text="🔄 Изменить", callback_data=Callback_Data(key=f"order_sdo_1-1", value=f"{subject}_{year}"))
-    markup.button(text="❌ Отмена", callback_data=Callback_Data(key=f"order_sdo", value=f"{subject}_{year}")); markup.adjust(1, 2)
+    markup.button(text="🔄 Изменить", callback_data=Callback_Data(key=f"order_sdo_1-1", value=f"{subject}_{work_id}"))
+    markup.button(text="❌ Отмена", callback_data=Callback_Data(key=f"order_sdo", value=f"{subject}_{work_id}")); markup.adjust(1, 2)
 
     await state.update_data(login=message.text)
     await state.set_state(classes.Form.password)
     await message.delete()
-    await bot.edit_message_caption(caption=content.text_order_SDO_2_3(year, subject_name, platform, login, password, price), chat_id=message.chat.id, message_id=message_id, reply_markup=markup.as_markup(), parse_mode="html")
+    await bot.edit_message_caption(caption=content.text_order_SDO_2_3(year, subject_name, work_id, work_id_name, platform, login, password, price), chat_id=message.chat.id, message_id=message_id, reply_markup=markup.as_markup(), parse_mode="html")
 
-    functions.register_temporary_data(message.chat.id, [message.text], [3], users_list)
+    functions.register_temporary_data(message.chat.id, [message.text], [4], users_list)
 
     #   ✅ СФОРМИРОВАТЬ ЗАКАЗ
 @dp.callback_query(Callback_Data.filter(F.key == "order_sdo_3"))
@@ -377,15 +374,15 @@ async def callback(callback: CallbackQuery):
     main_registry_list, active_registry_list = functions.import_lists_from_db(["main_registry_list", "active_registry_list"])
     chat_id = callback.message.chat.id
     username, year = functions.retrieve_from_instance(users_list[chat_id], ["username", "year"])
-    subject, platform, login, password = functions.retrieve_temporary_data(chat_id, [0, 1, 2, 3], users_list)
+    subject, work_id, platform, login, password = functions.retrieve_temporary_data(chat_id, [0, 1, 2, 3, 4], users_list)
     subject_name = main_registry_list[year][subject]["subject_name"]
     work, work_name = "sdo", main_registry_list[year][subject]["work"]["sdo"]["work_name"]
-    price = main_registry_list[year][subject]["work"]["sdo"]["price"]
-    work_id, work_id_name = None, None
+    work_id_name = main_registry_list[year][subject]["work"]["sdo"]["work_id"][work_id]["work_id_name"]
+    price = main_registry_list[year][subject]["work"]["sdo"]["work_id"][work_id]["price"]
     status = "begin"
-    executor_chat_id = main_registry_list[year][subject]["work"]["sdo"]["executors"][0]
-    main_registry_list[year][subject]["work"]["sdo"]["executors"].pop(0)
-    main_registry_list[year][subject]["work"]["sdo"]["executors"].append(executor_chat_id)
+    executor_chat_id = main_registry_list[year][subject]["work"]["sdo"]["work_id"][work_id]["executors"][0]
+    main_registry_list[year][subject]["work"]["sdo"]["work_id"][work_id]["executors"].pop(0)
+    main_registry_list[year][subject]["work"]["sdo"]["work_id"][work_id]["executors"].append(executor_chat_id)
     executor_username = db_connection.sql_SELECT('public."Executors"', "chat_id", executor_chat_id, ["username", ])[0][0]
 
     con, cur = functions.connection()
@@ -410,7 +407,7 @@ async def callback(callback: CallbackQuery):
     markup.button(text="💬 Связаться с исполнителем", url=f"https://t.me/{executor_username}")
     markup.button(text="На главную", callback_data=Callback_Data(key="main", value="")); markup.adjust(1)
 
-    await callback.message.edit_caption(caption=content.text_order_SDO_3(order_id, chat_id, username, year, subject_name, platform, login, password), reply_markup=markup.as_markup(), parse_mode="html")
+    await callback.message.edit_caption(caption=content.text_order_SDO_3(order_id, chat_id, username, year, subject_name, work_id, work_id_name, platform, login, password), reply_markup=markup.as_markup(), parse_mode="html")
 
 
 #   ЛАБОРАТОРНЫЕ РАБОТЫ
@@ -502,7 +499,7 @@ async def message(message: Message, state: FSMContext):
     subject, work_id = functions.retrieve_temporary_data(message.chat.id, [0, 1], users_list)
     subject_name = main_registry_list[year][subject]["subject_name"]
     work_id_name = main_registry_list[year][subject]["work"]["lab"]["work_id"][work_id]["work_id_name"]
-    price = main_registry_list[year][subject]["work"]["sdo"]["price"]
+    price = main_registry_list[year][subject]["work"]["lab"]["work_id"][work_id]["price"]
 
     if len(users_list[message.chat.id].other_data.temporary_data) == 4:
         manual_file_id, manual_file_name = functions.retrieve_temporary_data(message.chat.id, [2, 3], users_list)
