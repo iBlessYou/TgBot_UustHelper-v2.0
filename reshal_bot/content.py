@@ -61,8 +61,3 @@ text_application_add_payment_phone_number = ("📌 Введите номер т�
 
 text_application_add_payment_bank = ("📌 Введите название банка для оплаты. Можно указать несколько банков")
 
-def text_application_add_payment_confirm(phone_number, bank):
-    text = ("📌 Ваши данные:\n\n"
-            f"Номер телефона: {phone_number}\n"
-            f"Банк:  {bank}")
-    return text

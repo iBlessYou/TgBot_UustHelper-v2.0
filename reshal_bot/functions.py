@@ -14,13 +14,12 @@ def import_lists_from_db(values_list):
         executors_list = {}
         for row in executors_table:
             config = classes.Config()
+            config.selected_services.new = row[5]["selected_services"]["new"]
             config.selected_services.current = row[5]["selected_services"]["current"]
             config.selected_services.append = row[5]["selected_services"]["append"]
             config.selected_services.remove = row[5]["selected_services"]["remove"]
             config.order_filters.work = row[5]["order_filters"]["work"]
-            config.order_filters.status = row[5]["order_filters"]["status"]
             config.order_history_filters.work = row[5]["order_history_filters"]["work"]
-            config.order_history_filters.status = row[5]["order_history_filters"]["status"]
 
             other_data = classes.OtherData()
             other_data.temporary_data = row[6]["temporary_data"]
@@ -82,63 +81,13 @@ def register_executor(chat_id, username, first_name, last_name, executors_list):
     con.commit(); con.close()
 
 
-def status_mark(status):
-    if status == "begin":
-        mark = "🔵"
-    elif status == "waiting":
-        mark = "🌕"
-    elif status == "execution":
-        mark = "▶️"
-    elif status == "stopped":
-        mark = "⏸️"
-    elif status == "cancelled":
-        mark = "❌"
-    elif status == "completed":
-        mark = "✅"
-    else: mark = "❓"
-    return mark
+
 
 def retrieve_from_instance(instance, attribute_list):
     value_list = []
     for attribute in attribute_list:
         value_list.append(getattr(instance, attribute))
     return value_list
-
-def send_status_text(status):
-    if status == "begin":
-        status_text = f"📌Статус: Заказ отправлен"
-    elif status == "waiting":
-        status_text = "📌Статус: Заказ ждет выполнения"
-    elif status == "execution":
-        status_text = f"📌Статус: Заказ выполняется"
-    elif status == "waiting_completion":
-        status_text = f"📌Статус: Заказ ожидает оплаты"
-    elif status == "stopped":
-        status_text = f"📌Статус: Заказ приостановлен"
-    elif status == "cancelled":
-        status_text = f"📌Статус: Заказ отменен ❌"
-    elif status == "completed":
-        status_text = f"📌Статус: Заказ выполнен ✅"
-    else:
-        status_text = "📌Статус: Нет статуса заказ"
-    return status_text
-
-def send_status_text_user(status):
-    if status == "begin":
-        status_text = f"📌Статус: Ваш заказ отправлен"
-    elif status == "waiting":
-        status_text = "📌Статус: Ваш заказ ждет выполнения"
-    elif status == "execution":
-        status_text = f"📌Статус: Ваш заказ выполняется"
-    elif status == "stopped":
-        status_text = f"📌Статус: Ваш заказ приостановлен"
-    elif status == "cancelled":
-        status_text = f"📌Статус: Ваш заказ отменен ❌"
-    elif status == "completed":
-        status_text = f"📌Статус: Ваш заказ выполнен ✅"
-    else:
-        status_text = "📌Статус: Нет статуса заказ"
-    return status_text
 
 def check_keys(object, key_list):
     if len(key_list) == 2:
@@ -189,8 +138,7 @@ def delete_keys(object, key_list):
 
 
 
-def order_info(order_id, chat_id, username, year, subject_name, work, work_name, work_id, work_id_name, specific_data, status,
-               markup, executor_chat_id):
+def order_info(order_id, chat_id, username, year, subject_name, work, work_name, work_id, work_id_name, specific_data, markup):
     markup.button(text="Скрыть", callback_data=classes.Callback_Data(key="delete", value=""))
     file_path = None
     if work == "lab":
@@ -198,83 +146,14 @@ def order_info(order_id, chat_id, username, year, subject_name, work, work_name,
         if specific_data["manual_file_path"] != None:
             file_path = specific_data["manual_file_path"]
 
-        text = f"{send_status_text(status)}\nЗаказ № {order_id}: {work_name}\n\n"
-
-        if status == "begin":
-            text += f"ℹ️Детали заказа:\n • chat_id: {chat_id}\n • username: {username}\n • Курс: {year}\n • Предмет: {subject_name}\n • Номер ЛР: {work_id}\n • Название ЛР: {work_id_name}\n • Название архива/документа: {manual_file_name}"
-            markup.button(text="Одобрить заказ", callback_data=classes.Callback_Data(key="order_approve", value=f"{order_id}"))
-
-        elif status == "waiting":
-            text += f"ℹ️Детали заказа:\n • Курс: {year}\n • Предмет: {subject_name}\n • Номер ЛР: {work_id}\n • Название ЛР: {work_id_name}\n • Название архива/документа: {manual_file_name}"
-            markup.button(text="Принять заказ", callback_data=classes.Callback_Data(key="order_take", value=f"{order_id}"))
-
-        elif status == "stopped":
-            text += f"ℹ️Детали заказа:\n • chat_id: {chat_id}\n • username: {username}\n • Курс: {year}\n • Предмет: {subject_name}\n • Номер ЛР: {work_id}\n • Название ЛР: {work_id_name}\n • Название архива/документа: {manual_file_name}"
-
-        elif status == "execution":
-            text += (
-                f"ℹ️Детали заказа:\n • Курс: {year}\n • Предмет: {subject_name}\n • Номер ЛР: {work_id}\n • Название ЛР: {work_id_name}\n • Название архива/документа: {manual_file_name}"
-                f"\n\n❗Если заказ выполнен, отправьте архив с документами (лаб. работа и отчет к ней) в расширении zip/rar. "
-                f"Архив необходимо отправить как ответ на это сообщение.")
-            markup.button(text="Отказаться от заказа",
-                          callback_data=classes.Callback_Data(key="order_refuse", value=f"{order_id}"))
-
-        elif status == "waiting_completion":
-            markup.button(text="Подтвердить выполнение заказа",
-                          callback_data=classes.Callback_Data(key="order_completed", value=f"{order_id}"))
-            text += f"ℹ️Детали заказа:\n • chat_id: {chat_id}\n • username: {username}\n • Курс: {year}\n • Предмет: {subject_name}\n • Номер ЛР: {work_id}\n • Название ЛР: {work_id_name}\n • Название архива/документа: {manual_file_name}"
-            if specific_data["file_path"] != None:
-                file_path = specific_data["file_path"]
-
-        elif status == "completed":
-            text += f"ℹ️Детали заказа:\n • Курс: {year}\n • Предмет: {subject_name}\n • Номер ЛР: {work_id}\n • Название ЛР: {work_id_name}\n • Название архива/документа: {manual_file_name}"
-            if specific_data["file_path"] != None:
-                file_path = specific_data["file_path"]
-
-        elif status == "cancelled":
-            text += f"ℹ️Детали заказа:\n • Курс: {year}\n • Предмет: {subject_name}\n • Номер ЛР: {work_id}\n • Название ЛР: {work_id_name}\n • Название архива/документа: {manual_file_name}"
+        text = f"Заказ № {order_id}: {work_name}\n\n"
+        text += f"ℹ️Детали заказа:\n • chat_id: {chat_id}\n • username: {username}\n • Курс: {year}\n • Предмет: {subject_name}\n • Номер ЛР: {work_id}\n • Название ЛР: {work_id_name}\n • Название архива/документа: {manual_file_name}"
 
     elif work == "sdo":
         platform, login, password = specific_data["platform"], specific_data["login"], specific_data["password"]
-        text = f"{send_status_text(status)}\nЗаказ № {order_id}: {work_name}\n\n"
-
-        if status == "begin":
-            text += f"ℹ️Детали заказа:\n • username: {username}\n • Курс: {year}\n • Предмет: {subject_name}\n • Номер теста: {work_id}\n • Название теста: {work_id_name}\n • Платформа: {platform}\n • Логин: {login}\n • Пароль: {password}"
-            markup.button(text="Одобрить заказ", callback_data=classes.Callback_Data(key="order_approve", value=f"{order_id}"))
-
-        elif status == "waiting":
-            text += f"ℹ️Детали заказа:\n • Курс: {year}\n • Предмет: {subject_name} • Номер теста: {work_id}\n • Название теста: {work_id_name}\n"
-            markup.button(text="Принять заказ", callback_data=classes.Callback_Data(key="order_take", value=f"{order_id}"))
-
-        elif status == "stopped":
-            text += f"ℹ️Детали заказа:\n • username: {username}\n • Курс: {year}\n • Предмет: {subject_name}\n • Номер теста: {work_id}\n • Название теста: {work_id_name}\n • Платформа: {platform}\n • Логин: {login}\n • Пароль: {password}"
-            markup.button(text="Продолжить выполнение заказа",
-                          callback_data=classes.Callback_Data(key="order_continue", value=f"{order_id}"))
-
-        elif status == "execution":
-            text += (
-                f"ℹ️Детали заказа:\n • Курс: {year}\n • Предмет: {subject_name}\n • Номер теста: {work_id}\n • Название теста: {work_id_name}\n • Платформа: {platform}\n • Логин: {login}\n • Пароль: {password}"
-                f"\n\n❗Если заказ выполнен, отправьте фотографию главной страницы. "
-                f"Фото необходимо сжать и отправить как ответ на сообщение с информацией о заказе.")
-            markup.button(text="Отказаться от заказа",
-                          callback_data=classes.Callback_Data(key="order_refuse", value=f"{order_id}"))
-
-        elif status == "waiting_completion":
-            markup.button(text="Подтвердить выполнение заказа",
-                          callback_data=classes.Callback_Data(key="order_completed", value=f"{order_id}"))
-            text += f"ℹ️Детали заказа:\n • Курс: {year}\n • Предмет: {subject_name}\n • Номер теста: {work_id}\n • Название теста: {work_id_name}\n • Платформа: {platform}\n • Логин: {login}\n • Пароль: {password}"
-            if specific_data["file_path"] != None:
-                file_path = specific_data["file_path"]
-
-        elif status == "completed":
-            text += f"ℹ️Детали заказа:\n • Курс: {year}\n • Предмет: {subject_name}\n • Номер теста: {work_id}\n • Название теста: {work_id_name}\n • Платформа: {platform}\n • Логин: {login}\n • Пароль: {password}"
-            if specific_data["file_path"] != None:
-                file_path = specific_data["file_path"]
-
-        elif status == "cancelled":
-            text += f"ℹ️Детали заказа:\n • Курс: {year}\n • Предмет: {subject_name}\n • Номер теста: {work_id}\n • Название теста: {work_id_name}\n • Платформа: {platform}\n • Логин: {login}\n • Пароль: {password}"
-    if executor_chat_id in config.chat_id_access_list:
-        markup.button(text="❌ Отменить заказ", callback_data=classes.Callback_Data(key="order_cancel_1", value=f"{order_id}"))
+        text = f"Заказ № {order_id}: {work_name}\n\n"
+        text += f"ℹ️Детали заказа:\n • chat_id: {chat_id}\n • username: {username}\n • Курс: {year}\n • Предмет: {subject_name}\n • Номер теста: {work_id}\n • Название теста: {work_id_name}\n • Платформа: {platform}\n • Логин: {login}\n • Пароль: {password}"
+        markup.button(text="Одобрить заказ", callback_data=classes.Callback_Data(key="order_approve", value=f"{order_id}"))
 
     return [text, markup, file_path]
 

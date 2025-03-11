@@ -21,7 +21,6 @@ class Form(StatesGroup):
 class OrderHistoryFilters:
     def __init__(self):
         self.work = ["sdo", "lab"]
-        self.status = ["begin", "waiting", "execution", "stopped", "cancelled", "completed"]
 
 class SelectedServices:
     def __init__(self):
@@ -33,8 +32,6 @@ class SelectedServices:
 class OrderFilters:
     def __init__(self):
         self.work = ["sdo", "lab"]
-        self.status = ["begin", "waiting", "execution", "stopped", "cancelled", "completed"]
-
 
 class Config:
     selected_services = SelectedServices()
@@ -54,12 +51,10 @@ class Config:
             "remove": self.selected_services.remove
             },
             "order_filters": {
-            "work": self.order_filters.work,
-            "status": self.order_filters.status
+            "work": self.order_filters.work
             },
             "order_history_filters": {
-            "work": self.order_history_filters.work,
-            "status": self.order_history_filters.status
+            "work": self.order_history_filters.work
             }
         }
         return json.dumps(data)
@@ -72,12 +67,10 @@ class Config:
             "remove": cls.selected_services.remove
             },
             "order_filters": {
-            "work": cls.order_filters.work,
-            "status": cls.order_filters.status
+            "work": cls.order_filters.work
             },
             "order_history_filters": {
-            "work": cls.order_history_filters.work,
-            "status": cls.order_history_filters.status
+            "work": cls.order_history_filters.work
             }
         }
         return json.dumps(data)
@@ -105,7 +98,7 @@ class OtherData:
 
 
 class Order:
-    def __init__(self, chat_id, username, year, subject, subject_name, work, work_name, work_id, work_id_name, date_reg, status, price, executor_chat_id, executor_username, specific_data):
+    def __init__(self, chat_id, username, year, subject, subject_name, work, work_name, work_id, work_id_name, date_reg, price, executor_chat_id, executor_username, specific_data):
         self.chat_id = chat_id
         self.username = username
         self.year = year
@@ -116,7 +109,6 @@ class Order:
         self.work_id = work_id
         self.work_id_name = work_id_name
         self.date_reg = date_reg
-        self.status = status
         self.price = price
         self.executor_chat_id = executor_chat_id
         self.executor_username = executor_username

@@ -146,13 +146,11 @@ async def callback(callback: CallbackQuery):
 
     sorted_data = db_connection.sql_SELECT('public."Sorted_Data"', "object", "orders", ["data"])[0][0]
 
-    for status in users_list[callback.message.chat.id].config.order_history_filters.status:
-        for work in users_list[callback.message.chat.id].config.order_history_filters.work:
-            data = list(set(sorted_data["chat_id"][str(callback.message.chat.id)]) & set(sorted_data["status"][status]) & set(sorted_data["work"][work]))
-            for order_id in data:
-                mark = functions.status_mark(status)
-                text = f"{mark} Заказ № {order_id}"
-                markup.button(text=text, callback_data=Callback_Data(key="order", value=f"{order_id}"))
+    for work in users_list[callback.message.chat.id].config.order_history_filters.work:
+        data = list(set(sorted_data["chat_id"][str(callback.message.chat.id)]) & set(sorted_data["work"][work]))
+        for order_id in data:
+            text = f"Заказ № {order_id}"
+            markup.button(text=text, callback_data=Callback_Data(key="order", value=f"{order_id}"))
     markup.adjust(1, 1)
 
     await callback.message.edit_caption(caption=content.text_order_history, reply_markup=markup.as_markup())
@@ -198,13 +196,12 @@ async def callback(callback: CallbackQuery, callback_data=Callback_Data):
 async def callback(callback: CallbackQuery, callback_data: Callback_Data):
     orders_list, = functions.import_lists_from_db(["orders_list"])
     order_id = int(callback_data.value)
-    chat_id, username, year, subject_name, work, work_name, work_id, work_id_name, specific_data, status = functions.retrieve_from_instance(
+    chat_id, username, year, subject_name, work, work_name, work_id, work_id_name, specific_data = functions.retrieve_from_instance(
         orders_list[order_id],
-        ["chat_id", "username", "year", "subject_name", "work", "work_name", "work_id", "work_id_name", "specific_data",
-         "status"])
+        ["chat_id", "username", "year", "subject_name", "work", "work_name", "work_id", "work_id_name", "specific_data"])
     markup = InlineKeyboardBuilder()
     text, markup, file_path = functions.order_info_user(order_id, chat_id, year, subject_name, work, work_name, work_id,
-                                                        work_id_name, specific_data, status, markup)
+                                                        work_id_name, specific_data, markup)
     markup.adjust(1)
 
     if file_path == None:
@@ -379,7 +376,6 @@ async def callback(callback: CallbackQuery):
     work, work_name = "sdo", main_registry_list[year][subject]["work"]["sdo"]["work_name"]
     work_id_name = main_registry_list[year][subject]["work"]["sdo"]["work_id"][work_id]["work_id_name"]
     price = main_registry_list[year][subject]["work"]["sdo"]["work_id"][work_id]["price"]
-    status = "begin"
     executor_chat_id = main_registry_list[year][subject]["work"]["sdo"]["work_id"][work_id]["executors"][0]
     main_registry_list[year][subject]["work"]["sdo"]["work_id"][work_id]["executors"].pop(0)
     main_registry_list[year][subject]["work"]["sdo"]["work_id"][work_id]["executors"].append(executor_chat_id)
@@ -389,14 +385,13 @@ async def callback(callback: CallbackQuery):
     specific_data = {}
     functions.import_in_object(specific_data, ["platform", "login", "password", "file_path"], [platform, login, password, None])
 
-    cur.execute('INSERT INTO public."Orders" (chat_id, username, year, subject, subject_name, work, work_name, work_id, work_id_name, specific_data, status, price, executor_chat_id, executor_username)'
-    'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',(chat_id, username, year, subject, subject_name, work, work_name, work_id, work_id_name, json.dumps(specific_data), status, price, executor_chat_id, executor_username))
+    cur.execute('INSERT INTO public."Orders" (chat_id, username, year, subject, subject_name, work, work_name, work_id, work_id_name, specific_data, price, executor_chat_id, executor_username)'
+    'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',(chat_id, username, year, subject, subject_name, work, work_name, work_id, work_id_name, json.dumps(specific_data), price, executor_chat_id, executor_username))
     cur.execute('SELECT order_id FROM public."Orders" ORDER BY order_id DESC LIMIT 1;')
     order_id = cur.fetchall()[0][0]
     cur.execute('SELECT data FROM public."Sorted_Data" WHERE object = %s', ("orders",))
     sorted_data = cur.fetchall()[0][0]
     sorted_data["chat_id"][str(chat_id)].append(order_id)
-    sorted_data["status"]["begin"].append(order_id)
     sorted_data["work"]["sdo"].append(order_id)
     sorted_data["executor_chat_id"][str(executor_chat_id)].append(order_id)
     cur.execute('UPDATE public."Sorted_Data" SET data = %s WHERE object = %s', (json.dumps(sorted_data), "orders"))
@@ -528,7 +523,6 @@ async def call(callback: CallbackQuery):
     work, work_name = "lab", main_registry_list[year][subject]["work"]["lab"]["work_name"]
     work_id_name = main_registry_list[year][subject]["work"]["lab"]["work_id"][work_id]["work_id_name"]
     price = main_registry_list[year][subject]["work"]["lab"]["work_id"][work_id]["price"]
-    status = "begin"
     executor_chat_id = main_registry_list[year][subject]["work"]["lab"]["work_id"][work_id]["executors"][0]
     main_registry_list[year][subject]["work"]["lab"]["work_id"][work_id]["executors"].pop(0)
     main_registry_list[year][subject]["work"]["lab"]["work_id"][work_id]["executors"].append(executor_chat_id)
@@ -557,13 +551,12 @@ async def call(callback: CallbackQuery):
     functions.import_in_object(specific_info, ["manual_file_path", "manual_file_name", "additional_info", "file_path"],
                              [manual_file_path, manual_file_name, additional_info, None])
 
-    cur.execute('INSERT INTO public."Orders" (chat_id, username, year, subject, subject_name, work, work_name, work_id, work_id_name, specific_data, status, price, executor_chat_id, executor_username)'
-    'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',(chat_id, username, year, subject, subject_name, work, work_name, work_id, work_id_name, json.dumps(specific_info), status, price, executor_chat_id, executor_username))
+    cur.execute('INSERT INTO public."Orders" (chat_id, username, year, subject, subject_name, work, work_name, work_id, work_id_name, specific_data, price, executor_chat_id, executor_username)'
+    'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',(chat_id, username, year, subject, subject_name, work, work_name, work_id, work_id_name, json.dumps(specific_info), price, executor_chat_id, executor_username))
     cur.execute('SELECT order_id FROM public."Orders" ORDER BY order_id DESC LIMIT 1;')
     order_id = cur.fetchall()[0][0]
     cur.execute(f'SELECT data FROM public."Sorted_Data" WHERE object = %s', ("orders",))
     sorted_data = cur.fetchall()[0][0]
-    sorted_data["status"]["begin"].append(order_id)
     sorted_data["chat_id"][str(chat_id)].append(order_id)
     sorted_data["executor_chat_id"][str(executor_chat_id)].append(order_id)
     sorted_data["work"]["lab"].append(order_id)

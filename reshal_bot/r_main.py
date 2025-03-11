@@ -65,13 +65,11 @@ async def callback(callback: CallbackQuery):
 
     sorted_data = db_connection.sql_SELECT('public."Sorted_Data"', "object", "orders", ["data",])[0][0]
 
-    for status in executors_list[callback.message.chat.id].config.order_filters.status:
-        for work in executors_list[callback.message.chat.id].config.order_filters.work:
-            data = list(set(sorted_data["status"][status]) & set(sorted_data["work"][work]))
-            for order_id in data:
-                mark = functions.status_mark(status)
-                text = f"{mark} Заказ № {order_id}"
-                markup.button(text=text, callback_data=Callback_Data(key="order", value=f"{order_id}"))
+    for work in executors_list[callback.message.chat.id].config.order_filters.work:
+        data = list(set(sorted_data["work"][work]))
+        for order_id in data:
+            text = f"Заказ № {order_id}"
+            markup.button(text=text, callback_data=Callback_Data(key="order", value=f"{order_id}"))
 
     markup.adjust(1)
     await callback.message.edit_caption(caption=content.text_orders_all, reply_markup=markup.as_markup())
@@ -122,10 +120,10 @@ async def callback(callback: CallbackQuery, callback_data: Callback_Data):
     orders_list, = functions.import_lists_from_db(["orders_list"])
     order_id = int(callback_data.value)
 
-    chat_id, username, year, subject_name, work, work_name, work_id, work_id_name, specific_data, status = functions.retrieve_from_instance(
-        orders_list[order_id],["chat_id", "username", "year", "subject_name", "work", "work_name", "work_id", "work_id_name", "specific_data", "status"])
+    chat_id, username, year, subject_name, work, work_name, work_id, work_id_name, specific_data = functions.retrieve_from_instance(
+        orders_list[order_id],["chat_id", "username", "year", "subject_name", "work", "work_name", "work_id", "work_id_name", "specific_data"])
     markup = InlineKeyboardBuilder()
-    text, markup, file_path = functions.order_info(order_id, chat_id, username, year, subject_name, work, work_name, work_id, work_id_name, specific_data, status, markup, callback.message.chat.id)
+    text, markup, file_path = functions.order_info(order_id, chat_id, username, year, subject_name, work, work_name, work_id, work_id_name, specific_data, markup)
     markup.adjust(1)
     if file_path == None:
         await callback.message.answer(text, reply_markup=markup.as_markup(), parse_mode="html")
@@ -145,10 +143,10 @@ async def message(message: Message):
         await message.answer("Данного заказа не существует", reply_markup=markup.as_markup())
 
     else:
-        chat_id, username, year, subject_name, work, work_name, work_id, work_id_name, specific_data, status = functions.retrieve_from_instance(
-            orders_list[order_id],["chat_id", "username", "year", "subject_name", "work", "work_name", "work_id", "work_id_name", "specific_data", "status"])
+        chat_id, username, year, subject_name, work, work_name, work_id, work_id_name, specific_data = functions.retrieve_from_instance(
+            orders_list[order_id],["chat_id", "username", "year", "subject_name", "work", "work_name", "work_id", "work_id_name", "specific_data"])
         markup = InlineKeyboardBuilder()
-        text, markup, file_path = functions.order_info(order_id, chat_id, username, year, subject_name, work, work_name, work_id, work_id_name, specific_data, status, markup, message.chat.id)
+        text, markup, file_path = functions.order_info(order_id, chat_id, username, year, subject_name, work, work_name, work_id, work_id_name, specific_data, markup)
         markup.adjust(1)
         if file_path == None:
             await message.answer(text, reply_markup=markup.as_markup(), parse_mode="html")
@@ -167,13 +165,11 @@ async def callback(callback: CallbackQuery):
 
     sorted_data = db_connection.sql_SELECT('public."Sorted_Data"', "object", "orders", ["data"])[0][0]
 
-    for status in executors_list[callback.message.chat.id].config.order_history_filters.status:
-        for work in executors_list[callback.message.chat.id].config.order_history_filters.work:
-            data = list(set(sorted_data["executor_chat_id"][str(callback.message.chat.id)]) & set(sorted_data["status"][status]) & set(sorted_data["work"][work]))
-            for order_id in data:
-                mark = functions.status_mark(status)
-                text = f"{mark} Заказ № {order_id}"
-                markup.button(text=text, callback_data=Callback_Data(key="order", value=f"{order_id}"))
+    for work in executors_list[callback.message.chat.id].config.order_history_filters.work:
+        data = list(set(sorted_data["executor_chat_id"][str(callback.message.chat.id)]) & set(sorted_data["work"][work]))
+        for order_id in data:
+            text = f"Заказ № {order_id}"
+            markup.button(text=text, callback_data=Callback_Data(key="order", value=f"{order_id}"))
     markup.adjust(1, 1)
 
     await callback.message.edit_caption(caption=content.text_order_history, reply_markup=markup.as_markup())
