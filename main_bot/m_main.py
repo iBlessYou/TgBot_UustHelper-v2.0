@@ -65,13 +65,13 @@ async def start(callback: CallbackQuery):
 async def callback(callback: CallbackQuery):
 
     markup = InlineKeyboardBuilder()
-    markup.button(text="Услуги", callback_data=Callback_Data(key=f"subjects", value=""))
-    markup.button(text="Полезные материалы", callback_data=Callback_Data(key=f"useful_subjects", value=""))
+    markup.button(text="🛠️ Услуги", callback_data=Callback_Data(key=f"subjects", value=""))
+    #markup.button(text="Полезные материалы", callback_data=Callback_Data(key=f"useful_subjects", value=""))
     markup.button(text="📡 Помощь", callback_data=Callback_Data(key="help", value=""))
-    markup.button(text="О нас", callback_data=Callback_Data(key="about_us", value=""))
+    markup.button(text="🌚 О нас", callback_data=Callback_Data(key="about_us", value=""))
     markup.button(text="📋 История заказов", callback_data=Callback_Data(key="order_history", value=""))
     markup.button(text="⚙️ Настройки", callback_data=Callback_Data(key="settings", value=""))
-    markup.adjust(1, 1, 2, 1, 1)
+    markup.adjust(1, 2, 1, 1)
 
     await callback.message.edit_caption(caption=content.text_main, reply_markup=markup.as_markup())
 
@@ -101,8 +101,8 @@ async def callback(callback: CallbackQuery):
 async def callback(callback: CallbackQuery):
 
     markup = InlineKeyboardBuilder()
-    markup.button(text="Изменить фон сообщения", callback_data=Callback_Data(key="background", value=""))
-    markup.button(text="Изменить курс обучения", callback_data=Callback_Data(key="start", value=""))
+    markup.button(text="🖼️ Изменить фон сообщения", callback_data=Callback_Data(key="background", value=""))
+    markup.button(text="🔄 Изменить курс обучения", callback_data=Callback_Data(key="start", value=""))
     markup.button(text="⬅️ Назад", callback_data=Callback_Data(key="main", value=""))
     markup.adjust(1, 1, 1)
 
@@ -114,7 +114,7 @@ async def callback(callback: CallbackQuery):
 async def callback(callback: CallbackQuery):
 
     markup = InlineKeyboardBuilder()
-    markup.button(text="Отмена", callback_data=Callback_Data(key="settings", value=""))
+    markup.button(text="❌ Отмена", callback_data=Callback_Data(key="settings", value=""))
 
     await callback.message.edit_caption(caption=content.text_settings_bg, reply_markup=markup.as_markup())
 
@@ -139,16 +139,16 @@ async def photo_handle(message: Message):
     #   ИСТОРИЯ ЗАКАЗОВ
 @dp.callback_query(Callback_Data.filter(F.key == "order_history"))
 async def callback(callback: CallbackQuery):
+    orders_list, = functions.import_lists_from_db(["orders_list"])
 
     markup = InlineKeyboardBuilder()
-    markup.button(text="Настроить фильтры", callback_data=Callback_Data(key="order_history_filters", value="none_none"))
-    markup.button(text="Назад", callback_data=Callback_Data(key="main", value=""))
+    markup.button(text="🔄 Настроить фильтры", callback_data=Callback_Data(key="order_history_filters", value="none_none"))
+    markup.button(text="⬅️ Назад", callback_data=Callback_Data(key="main", value=""))
 
     sorted_data = db_connection.sql_SELECT('public."Sorted_Data"', "object", "orders", ["data"])[0][0]
 
-    for work in users_list[callback.message.chat.id].config.order_history_filters.work:
-        data = list(set(sorted_data["chat_id"][str(callback.message.chat.id)]) & set(sorted_data["work"][work]))
-        for order_id in data:
+    for order_id in sorted_data["chat_id"][str(callback.message.chat.id)]:
+        if orders_list[order_id].work in users_list[callback.message.chat.id].config.order_history_filters.work:
             text = f"Заказ № {order_id}"
             markup.button(text=text, callback_data=Callback_Data(key="order", value=f"{order_id}"))
     markup.adjust(1, 1)
@@ -174,14 +174,16 @@ async def callback(callback: CallbackQuery, callback_data=Callback_Data):
         register_filters()
 
     markup = InlineKeyboardBuilder()
-    markup.button(text="Назад", callback_data=Callback_Data(key="order_history", value=""))
+    markup.button(text="⬅️ Назад", callback_data=Callback_Data(key="order_history", value=""))
     for parameter in dir(filters):
         if not parameter.startswith("__"):
             for argument in getattr(filters, parameter):
                 if argument in getattr(data, parameter):
-                    text = f"✅ {argument}"
+                    argument_name = content.dictionary[argument]
+                    text = f"✅ {argument_name}"
                 else:
-                    text = f"{argument}"
+                    argument_name = content.dictionary[argument]
+                    text = f"{argument_name}"
                 markup.button(text=text, callback_data=Callback_Data(key=f"order_history_filters", value=f"{parameter}_{argument}"))
     markup.adjust(1, 2)
 
@@ -196,12 +198,12 @@ async def callback(callback: CallbackQuery, callback_data=Callback_Data):
 async def callback(callback: CallbackQuery, callback_data: Callback_Data):
     orders_list, = functions.import_lists_from_db(["orders_list"])
     order_id = int(callback_data.value)
-    chat_id, username, year, subject_name, work, work_name, work_id, work_id_name, specific_data = functions.retrieve_from_instance(
+    chat_id, username, year, subject_name, work, work_name, work_id, work_id_name, specific_data, price = functions.retrieve_from_instance(
         orders_list[order_id],
-        ["chat_id", "username", "year", "subject_name", "work", "work_name", "work_id", "work_id_name", "specific_data"])
+        ["chat_id", "username", "year", "subject_name", "work", "work_name", "work_id", "work_id_name", "specific_data", "price"])
     markup = InlineKeyboardBuilder()
     text, markup, file_path = functions.order_info_user(order_id, chat_id, year, subject_name, work, work_name, work_id,
-                                                        work_id_name, specific_data, markup)
+                                                        work_id_name, specific_data, price, markup)
     markup.adjust(1)
 
     if file_path == None:
@@ -285,7 +287,9 @@ async def callback(callback: CallbackQuery, callback_data: Callback_Data):
     work_id = callback_data.value.split("_")[1]
 
     markup = InlineKeyboardBuilder()
-    markup.button(text="➡️ Перейти к оформлению", callback_data=Callback_Data(key=f"order_sdo_1-1", value=f"{subject}_{work_id}"))
+
+    markup.button(text="➡️ Ввести персональные данные", callback_data=Callback_Data(key=f"order_sdo_1-1", value=f"{subject}_{work_id}"))
+    markup.button(text="➡️ Перейти к оформлению", callback_data=Callback_Data(key=f"order_sdo_1-3", value=f"{subject}_{work_id}"))
     markup.button(text="⬅️ Назад", callback_data=Callback_Data(key="services", value=f"{subject}")); markup.adjust(1)
 
     await callback.message.edit_caption(caption=content.text_order_SDO, reply_markup=markup.as_markup())
@@ -320,6 +324,7 @@ async def callback(callback: CallbackQuery, callback_data: Callback_Data):
     await callback.message.edit_caption(caption=content.text_order_SDO_1_2(platform), reply_markup=markup.as_markup())
 
     functions.register_temporary_data(callback.message.chat.id, [platform], [2], users_list)
+
 
     #   ВВЕСТИ ЛОГИН, ПАРОЛЬ
 @dp.callback_query(Callback_Data.filter(F.key == "order_sdo_2"))
@@ -365,6 +370,26 @@ async def message(message: Message, state: FSMContext):
 
     functions.register_temporary_data(message.chat.id, [message.text], [4], users_list)
 
+@dp.callback_query(Callback_Data.filter(F.key=="order_sdo_1-3"))
+async def callback(callback: CallbackQuery, callback_data: Callback_Data):
+    main_registry_list, = functions.import_lists_from_db(["main_registry_list"])
+    year = users_list[callback.message.chat.id].year
+    subject, work_id = callback_data.value.split("_")[0], callback_data.value.split("_")[1]
+    platform, login, password = None, None, None
+    subject_name = main_registry_list[year][subject]["subject_name"]
+    work_id_name = main_registry_list[year][subject]["work"]["sdo"]["work_id"][work_id]["work_id_name"]
+    price = main_registry_list[year][subject]["work"]["sdo"]["work_id"][work_id]["price"]
+
+    markup = InlineKeyboardBuilder()
+    markup.button(text="✅ Сформировать заказ", callback_data=Callback_Data(key=f"order_sdo_3", value=""))
+    markup.button(text="❌ Отмена", callback_data=Callback_Data(key=f"order_sdo", value=f"{subject}_{work_id}"))
+    markup.adjust(1, 2)
+
+    await callback.message.edit_caption(caption=content.text_order_SDO_2_3(year, subject_name, work_id, work_id_name, platform, login, password,
+                                           price), reply_markup=markup.as_markup(), parse_mode="html")
+
+    functions.register_temporary_data(callback.message.chat.id, [subject, work_id, platform, login, password], [0, 1, 2, 3, 4], users_list)
+
     #   ✅ СФОРМИРОВАТЬ ЗАКАЗ
 @dp.callback_query(Callback_Data.filter(F.key == "order_sdo_3"))
 async def callback(callback: CallbackQuery):
@@ -386,7 +411,7 @@ async def callback(callback: CallbackQuery):
     functions.import_in_object(specific_data, ["platform", "login", "password", "file_path"], [platform, login, password, None])
 
     cur.execute('INSERT INTO public."Orders" (chat_id, username, year, subject, subject_name, work, work_name, work_id, work_id_name, specific_data, price, executor_chat_id, executor_username)'
-    'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',(chat_id, username, year, subject, subject_name, work, work_name, work_id, work_id_name, json.dumps(specific_data), price, executor_chat_id, executor_username))
+    'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',(chat_id, username, year, subject, subject_name, work, work_name, work_id, work_id_name, json.dumps(specific_data), price, executor_chat_id, executor_username))
     cur.execute('SELECT order_id FROM public."Orders" ORDER BY order_id DESC LIMIT 1;')
     order_id = cur.fetchall()[0][0]
     cur.execute('SELECT data FROM public."Sorted_Data" WHERE object = %s', ("orders",))
@@ -400,9 +425,9 @@ async def callback(callback: CallbackQuery):
 
     markup = InlineKeyboardBuilder()
     markup.button(text="💬 Связаться с исполнителем", url=f"https://t.me/{executor_username}")
-    markup.button(text="На главную", callback_data=Callback_Data(key="main", value="")); markup.adjust(1)
+    markup.button(text="🏠 На главную", callback_data=Callback_Data(key="main", value="")); markup.adjust(1)
 
-    await callback.message.edit_caption(caption=content.text_order_SDO_3(order_id, chat_id, username, year, subject_name, work_id, work_id_name, platform, login, password), reply_markup=markup.as_markup(), parse_mode="html")
+    await callback.message.edit_caption(caption=content.text_order_SDO_3(order_id, chat_id, year, subject_name, work_id, work_id_name, platform, login, password, price), reply_markup=markup.as_markup(), parse_mode="html")
 
 
 #   ЛАБОРАТОРНЫЕ РАБОТЫ
@@ -431,10 +456,10 @@ async def callback(callback: CallbackQuery, callback_data: Callback_Data):
     url = main_registry_list[year][subject]["work"]["lab"]["work_id"][work_id]["manual_link"]
 
     markup = InlineKeyboardBuilder()
-    markup.button(text="Посмотреть", url=url)
-    markup.button(text="Далее", callback_data=Callback_Data(key="order_lab_2", value=""))
-    markup.button(text="Добавить архив", callback_data=Callback_Data(key="order_lab_1-1", value=""))
-    markup.button(text="Назад", callback_data=Callback_Data(key=f"order_lab", value=f"{subject}_{work_id}")); markup.adjust(1)
+    markup.button(text="📖 Посмотреть", url=url)
+    markup.button(text="➡️ Далее", callback_data=Callback_Data(key="order_lab_2", value=""))
+    markup.button(text="📦 Добавить архив", callback_data=Callback_Data(key="order_lab_1-1", value=""))
+    markup.button(text="⬅️ Назад", callback_data=Callback_Data(key=f"order_lab", value=f"{subject}_{work_id}")); markup.adjust(1)
 
     await callback.message.edit_caption(caption=content.text_order_lab_1, reply_markup=markup.as_markup())
 
@@ -447,7 +472,7 @@ async def callback(callback: CallbackQuery, state: FSMContext):
     subject, work_id = functions.retrieve_temporary_data(callback.message.chat.id, [0, 1], users_list)
 
     markup = InlineKeyboardBuilder()
-    markup.button(text="Назад", callback_data=Callback_Data(key=f"order_lab_1", value=f"{subject}_{work_id}"))
+    markup.button(text="⬅️ Назад", callback_data=Callback_Data(key=f"order_lab_1", value=f"{subject}_{work_id}"))
 
     await state.set_state(classes.Form.manual_file)
     await callback.message.edit_caption(caption=content.text_order_lab_1_1, reply_markup=markup.as_markup())
@@ -464,10 +489,10 @@ async def message(message: Message, state: FSMContext):
     url = main_registry_list[year][subject]["work"]["lab"]["work_id"][work_id]["manual_link"]
 
     markup = InlineKeyboardBuilder()
-    markup.button(text="Посмотреть", url=url)
-    markup.button(text="Далее", callback_data=Callback_Data(key=f"order_lab_2", value=""))
-    markup.button(text="Удалить архив", callback_data=Callback_Data(key=f"order_lab_1", value=f"{subject}_{work_id}"))
-    markup.button(text="Назад", callback_data=Callback_Data(key=f"order_lab", value=f"{subject}_{work_id}")); markup.adjust(1)
+    markup.button(text="📖 Посмотреть", url=url)
+    markup.button(text="➡️ Далее", callback_data=Callback_Data(key=f"order_lab_2", value=""))
+    markup.button(text="🗑️ Удалить архив", callback_data=Callback_Data(key=f"order_lab_1", value=f"{subject}_{work_id}"))
+    markup.button(text="⬅️ Назад", callback_data=Callback_Data(key=f"order_lab", value=f"{subject}_{work_id}")); markup.adjust(1)
 
     await message.delete()
     await bot.edit_message_caption(caption=content.text_order_lab_1_(manual_file_name), chat_id=message.chat.id, message_id=message_id, reply_markup=markup.as_markup())
@@ -480,7 +505,7 @@ async def callback(callback: CallbackQuery, state: FSMContext):
     subject, work_id = functions.retrieve_temporary_data(callback.message.chat.id, [0, 1], users_list)
 
     markup = InlineKeyboardBuilder()
-    markup.button(text="Назад", callback_data=Callback_Data(key=f"order_lab_1", value=f"{subject}_{work_id}"))
+    markup.button(text="⬅️ Назад", callback_data=Callback_Data(key=f"order_lab_1", value=f"{subject}_{work_id}"))
 
     await state.set_state(classes.Form.additional_info)
     await callback.message.edit_caption(caption=content.text_order_lab_2_1, reply_markup=markup.as_markup())
@@ -552,7 +577,7 @@ async def call(callback: CallbackQuery):
                              [manual_file_path, manual_file_name, additional_info, None])
 
     cur.execute('INSERT INTO public."Orders" (chat_id, username, year, subject, subject_name, work, work_name, work_id, work_id_name, specific_data, price, executor_chat_id, executor_username)'
-    'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',(chat_id, username, year, subject, subject_name, work, work_name, work_id, work_id_name, json.dumps(specific_info), price, executor_chat_id, executor_username))
+    'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',(chat_id, username, year, subject, subject_name, work, work_name, work_id, work_id_name, json.dumps(specific_info), price, executor_chat_id, executor_username))
     cur.execute('SELECT order_id FROM public."Orders" ORDER BY order_id DESC LIMIT 1;')
     order_id = cur.fetchall()[0][0]
     cur.execute(f'SELECT data FROM public."Sorted_Data" WHERE object = %s', ("orders",))
@@ -566,17 +591,14 @@ async def call(callback: CallbackQuery):
 
     markup = InlineKeyboardBuilder()
     markup.button(text="💬 Связаться с исполнителем", url=f"https://t.me/{executor_username}")
-    markup.button(text="На главную", callback_data=Callback_Data(key="main", value="")); markup.adjust(1)
+    markup.button(text="🏠 На главную", callback_data=Callback_Data(key="main", value="")); markup.adjust(1)
 
-    await callback.message.edit_caption(caption=content.text_order_lab_3(order_id, chat_id, username, year, subject_name, work_id, work_id_name, manual_file_name), reply_markup=markup.as_markup(), parse_mode="html")
-
-
+    await callback.message.edit_caption(caption=content.text_order_lab_3(order_id, chat_id, year, subject_name, work_id, work_id_name, manual_file_name, price), reply_markup=markup.as_markup(), parse_mode="html")
 
 @dp.message(Command("user"))
 async def user_profile(message):
     await bot.send_message(message.chat.id, f"chat_id: {message.chat.id}\nusername: {message.from_user.username}\n"
                                       f"first_name: {message.from_user.first_name}\nlast_name: {message.from_user.last_name}")
-
 
 @dp.callback_query(Callback_Data.filter(F.key == "delete"))
 async def callback_data(callback: CallbackQuery):

@@ -59,15 +59,15 @@ async def callback(callback: CallbackQuery):
     #   ЗАКАЗЫ
 @dp.callback_query(Callback_Data.filter(F.key == "orders"))
 async def callback(callback: CallbackQuery):
+    orders_list, = functions.import_lists_from_db(["orders_list"])
     markup = InlineKeyboardBuilder()
     markup.button(text="Настроить фильтры", callback_data=Callback_Data(key="order_filters", value="none_none"))
     markup.button(text="Назад", callback_data=Callback_Data(key="main", value=""))
 
     sorted_data = db_connection.sql_SELECT('public."Sorted_Data"', "object", "orders", ["data",])[0][0]
 
-    for work in executors_list[callback.message.chat.id].config.order_filters.work:
-        data = list(set(sorted_data["work"][work]))
-        for order_id in data:
+    for order_id in orders_list.keys():
+        if orders_list[order_id].work in executors_list[callback.message.chat.id].config.order_filters.work:
             text = f"Заказ № {order_id}"
             markup.button(text=text, callback_data=Callback_Data(key="order", value=f"{order_id}"))
 
@@ -98,9 +98,11 @@ async def callback(callback: CallbackQuery, callback_data=Callback_Data):
         if not parameter.startswith("__"):
             for argument in getattr(filters, parameter):
                 if argument in getattr(data, parameter):
-                    text = f"✅ {argument}"
+                    argument_name = content.dictionary[argument]
+                    text = f"✅ {argument_name}"
                 else:
-                    text = f"{argument}"
+                    argument_name = content.dictionary[argument]
+                    text = f"{argument_name}"
                 markup.button(text=text, callback_data=Callback_Data(key=f"order_filters", value=f"{parameter}_{argument}"))
     markup.adjust(1, 2)
 
@@ -120,10 +122,10 @@ async def callback(callback: CallbackQuery, callback_data: Callback_Data):
     orders_list, = functions.import_lists_from_db(["orders_list"])
     order_id = int(callback_data.value)
 
-    chat_id, username, year, subject_name, work, work_name, work_id, work_id_name, specific_data = functions.retrieve_from_instance(
-        orders_list[order_id],["chat_id", "username", "year", "subject_name", "work", "work_name", "work_id", "work_id_name", "specific_data"])
+    chat_id, username, year, subject_name, work, work_name, work_id, work_id_name, specific_data, price = functions.retrieve_from_instance(
+        orders_list[order_id],["chat_id", "username", "year", "subject_name", "work", "work_name", "work_id", "work_id_name", "specific_data", "price"])
     markup = InlineKeyboardBuilder()
-    text, markup, file_path = functions.order_info(order_id, chat_id, username, year, subject_name, work, work_name, work_id, work_id_name, specific_data, markup)
+    text, markup, file_path = functions.order_info(order_id, chat_id, username, year, subject_name, work, work_name, work_id, work_id_name, specific_data, price, markup)
     markup.adjust(1)
     if file_path == None:
         await callback.message.answer(text, reply_markup=markup.as_markup(), parse_mode="html")
@@ -143,10 +145,10 @@ async def message(message: Message):
         await message.answer("Данного заказа не существует", reply_markup=markup.as_markup())
 
     else:
-        chat_id, username, year, subject_name, work, work_name, work_id, work_id_name, specific_data = functions.retrieve_from_instance(
-            orders_list[order_id],["chat_id", "username", "year", "subject_name", "work", "work_name", "work_id", "work_id_name", "specific_data"])
+        chat_id, username, year, subject_name, work, work_name, work_id, work_id_name, specific_data, price = functions.retrieve_from_instance(
+            orders_list[order_id],["chat_id", "username", "year", "subject_name", "work", "work_name", "work_id", "work_id_name", "specific_data", "price"])
         markup = InlineKeyboardBuilder()
-        text, markup, file_path = functions.order_info(order_id, chat_id, username, year, subject_name, work, work_name, work_id, work_id_name, specific_data, markup)
+        text, markup, file_path = functions.order_info(order_id, chat_id, username, year, subject_name, work, work_name, work_id, work_id_name, specific_data, price, markup)
         markup.adjust(1)
         if file_path == None:
             await message.answer(text, reply_markup=markup.as_markup(), parse_mode="html")
@@ -155,9 +157,9 @@ async def message(message: Message):
         await message.delete()
 
         #   ИСТОРИЯ ЗАКАЗОВ
-
 @dp.callback_query(Callback_Data.filter(F.key == "order_history"))
 async def callback(callback: CallbackQuery):
+    orders_list, = functions.import_lists_from_db(["orders_list"])
 
     markup = InlineKeyboardBuilder()
     markup.button(text="Настроить фильтры", callback_data=Callback_Data(key="order_history_filters", value="none_none"))
@@ -165,9 +167,8 @@ async def callback(callback: CallbackQuery):
 
     sorted_data = db_connection.sql_SELECT('public."Sorted_Data"', "object", "orders", ["data"])[0][0]
 
-    for work in executors_list[callback.message.chat.id].config.order_history_filters.work:
-        data = list(set(sorted_data["executor_chat_id"][str(callback.message.chat.id)]) & set(sorted_data["work"][work]))
-        for order_id in data:
+    for order_id in sorted_data["executor_chat_id"][str(callback.message.chat.id)]:
+        if orders_list[order_id].work in executors_list[callback.message.chat.id].config.order_history_filters.work:
             text = f"Заказ № {order_id}"
             markup.button(text=text, callback_data=Callback_Data(key="order", value=f"{order_id}"))
     markup.adjust(1, 1)
@@ -196,9 +197,11 @@ async def callback(callback: CallbackQuery, callback_data=Callback_Data):
         if not parameter.startswith("__"):
             for argument in getattr(filters, parameter):
                 if argument in getattr(data, parameter):
-                    text = f"✅ {argument}"
+                    argument_name = content.dictionary[argument]
+                    text = f"✅ {argument_name}"
                 else:
-                    text = f"{argument}"
+                    argument_name = content.dictionary[argument]
+                    text = f"{argument_name}"
                 markup.button(text=text, callback_data=Callback_Data(key=f"order_history_filters", value=f"{parameter}_{argument}"))
     markup.adjust(1, 2)
 
@@ -391,9 +394,71 @@ async def callback(callback: CallbackQuery):
 
     markup = InlineKeyboardBuilder()
     markup.button(text="Назад", callback_data=Callback_Data(key=f"services", value=""))
-    markup.button(text="Обновить", callback_data=Callback_Data(key=f"services_form_update", value="")); markup.adjust(1)
+    markup.button(text="Обновить", callback_data=Callback_Data(key=f"services_form_update", value=""))
+    markup.button(text="Показать выбранные услуги на добавление", callback_data=Callback_Data(key=f"services_form_view_append", value=""))
+    markup.button(text="Показать выбранные услуги на удаление", callback_data=Callback_Data(key=f"services_form_view_remove", value=""))
+    markup.adjust(1)
 
     await callback.message.edit_caption(caption=text_application_form, reply_markup=markup.as_markup())
+
+@dp.callback_query(Callback_Data.filter(F.key == "services_form_view_append"))
+async def callback(callback: CallbackQuery):
+    chat_id = callback.message.chat.id
+    main_registry_list, = functions.import_lists_from_db(["main_registry_list", ])
+
+    text_application_form = ("📌Выбранные услуги на добавление: ")
+    if executors_list[chat_id].config.selected_services.append == {}:
+        text_application_form += "нет услуг.\n\n"
+    else:
+        text_application_form += "\n\n"
+    for year in list(executors_list[chat_id].config.selected_services.append.keys()):
+        text = f"Курс {year}:\n"
+        for subject_id in list(executors_list[chat_id].config.selected_services.append[year].keys()):
+            subject_name = main_registry_list[year][subject_id]["subject_name"]
+            text += f"  • {subject_name}:\n"
+            for work in executors_list[chat_id].config.selected_services.append[year][subject_id]:
+                work_name = main_registry_list[year][subject_id]["work"][work]["work_name"]
+                text += f"      • {work_name}\n"
+                for work_id in executors_list[chat_id].config.selected_services.append[year][subject_id][work]:
+                    work_id_name = main_registry_list[year][subject_id]["work"][work]["work_id"][work_id][
+                        "work_id_name"]
+                    text += f"          {work_id}. {work_id_name}\n"
+        text_application_form += text + "\n"
+
+    markup = InlineKeyboardBuilder()
+    markup.button(text="Скрыть", callback_data=Callback_Data(key="delete", value=""))
+
+    await callback.message.answer(text_application_form, reply_markup=markup.as_markup())
+
+
+@dp.callback_query(Callback_Data.filter(F.key == "services_form_view_remove"))
+async def callback(callback: CallbackQuery):
+    chat_id = callback.message.chat.id
+    main_registry_list, = functions.import_lists_from_db(["main_registry_list", ])
+
+    text_application_form = ("📌Выбранные услуги на удаление: ")
+    if executors_list[chat_id].config.selected_services.remove == {}:
+        text_application_form += "нет услуг.\n\n"
+    else:
+        text_application_form += "\n\n"
+    for year in list(executors_list[chat_id].config.selected_services.remove.keys()):
+        text = f"Курс {year}:\n"
+        for subject_id in list(executors_list[chat_id].config.selected_services.remove[year].keys()):
+            subject_name = main_registry_list[year][subject_id]["subject_name"]
+            text += f"  • {subject_name}:\n"
+            for work in executors_list[chat_id].config.selected_services.remove[year][subject_id]:
+                work_name = main_registry_list[year][subject_id]["work"][work]["work_name"]
+                text += f"      • {work_name}\n"
+                for work_id in executors_list[chat_id].config.selected_services.remove[year][subject_id][work]:
+                    work_id_name = main_registry_list[year][subject_id]["work"][work]["work_id"][work_id][
+                        "work_id_name"]
+                    text += f"          {work_id}. {work_id_name}\n"
+        text_application_form += text + "\n"
+
+    markup = InlineKeyboardBuilder()
+    markup.button(text="Скрыть", callback_data=Callback_Data(key="delete", value=""))
+
+    await callback.message.answer(text_application_form, reply_markup=markup.as_markup())
 
 @dp.callback_query(Callback_Data.filter(F.key == "services_form_update"))
 async def callback(callback: CallbackQuery):

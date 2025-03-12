@@ -35,7 +35,7 @@ def import_lists_from_db(values_list):
         orders_table = cur.fetchall()
         orders_list = {}
         for row in orders_table:
-            orders_list[row[0]] = classes.Order(row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10], row[11], row[12], row[13], row[14], row[15])
+            orders_list[row[0]] = classes.Order(row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10], row[11], row[12], row[13], row[14])
         lists.append(orders_list)
 
     if "sorted_data_orders_list" in values_list:
@@ -138,7 +138,7 @@ def delete_keys(object, key_list):
 
 
 
-def order_info(order_id, chat_id, username, year, subject_name, work, work_name, work_id, work_id_name, specific_data, markup):
+def order_info(order_id, chat_id, username, year, subject_name, work, work_name, work_id, work_id_name, specific_data, price, markup):
     markup.button(text="Скрыть", callback_data=classes.Callback_Data(key="delete", value=""))
     file_path = None
     if work == "lab":
@@ -146,14 +146,31 @@ def order_info(order_id, chat_id, username, year, subject_name, work, work_name,
         if specific_data["manual_file_path"] != None:
             file_path = specific_data["manual_file_path"]
 
-        text = f"Заказ № {order_id}: {work_name}\n\n"
-        text += f"ℹ️Детали заказа:\n • chat_id: {chat_id}\n • username: {username}\n • Курс: {year}\n • Предмет: {subject_name}\n • Номер ЛР: {work_id}\n • Название ЛР: {work_id_name}\n • Название архива/документа: {manual_file_name}"
+        text = (f"📌 <b>Заказ № {order_id}:</b> {work_name}\n\n"
+        f"ℹ️Детали заказа:\n"
+        f" • <b>chat_id:</b> {chat_id}\n"
+        f" • <b>username:</b> {username}\n"
+        f" • <b>Курс:</b> {year}\n"
+        f" • <b>Предмет:</b> {subject_name}\n"
+        f" • <b>Номер ЛР:</b> {work_id}\n"
+        f" • <b>Название ЛР:</b> {work_id_name}\n"
+        f" • <b>Название архива/документа:</b> {manual_file_name}\n"
+        f" • <b>Стоимость оплаты:</b> {price}")
 
     elif work == "sdo":
         platform, login, password = specific_data["platform"], specific_data["login"], specific_data["password"]
-        text = f"Заказ № {order_id}: {work_name}\n\n"
-        text += f"ℹ️Детали заказа:\n • chat_id: {chat_id}\n • username: {username}\n • Курс: {year}\n • Предмет: {subject_name}\n • Номер теста: {work_id}\n • Название теста: {work_id_name}\n • Платформа: {platform}\n • Логин: {login}\n • Пароль: {password}"
-        markup.button(text="Одобрить заказ", callback_data=classes.Callback_Data(key="order_approve", value=f"{order_id}"))
+        text = (f"📌 <b>Заказ № {order_id}:</b> {work_name}\n\n"
+        f"ℹ️Детали заказа:\n"
+        f" • <b>chat_id:</b> {chat_id}\n"
+        f" • <b>username:</b> {username}\n"
+        f" • <b>Курс:</b> {year}\n"
+        f" • <b>Предмет:</b> {subject_name}\n"
+        f" • <b>Номер теста:</b> {work_id}\n"
+        f" • <b>Название теста:</b> {work_id_name}\n"
+        f" • <b>Платформа:</b> {platform}\n"
+        f" • <b>Логин:</b> {login}\n"
+        f" • <b>Пароль:</b> {password}\n"
+        f" • <b>Стоимость оплаты:</b> {price}")
 
     return [text, markup, file_path]
 

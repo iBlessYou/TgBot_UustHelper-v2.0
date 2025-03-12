@@ -30,7 +30,7 @@ def import_lists_from_db(values_list):
         orders_table = cur.fetchall()
         orders_list = {}
         for row in orders_table:
-            orders_list[row[0]] = classes.Order(row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10], row[11], row[12], row[13], row[14], row[15])
+            orders_list[row[0]] = classes.Order(row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10], row[11], row[12], row[13], row[14])
         lists.append(orders_list)
 
     if "sorted_data_orders_list" in values_list:
@@ -110,17 +110,23 @@ def import_in_object(object, key_list, value_list):
         object[key] = value
 
 
-def order_info_user(order_id, chat_id, year, subject_name, work, work_name, work_id, work_id_name, specific_data, markup):
-    markup.button(text="Скрыть",  callback_data=classes.Callback_Data(key="delete", value=""))
+def order_info_user(order_id, chat_id, year, subject_name, work, work_name, work_id, work_id_name, specific_data, price, markup):
+    markup.button(text="🧹 Скрыть",  callback_data=classes.Callback_Data(key="delete", value=""))
     if work == "lab":
 
         manual_file_path, manual_file_name = specific_data["manual_file_path"], specific_data["manual_file_name"]
-        text = f"Заказ № {order_id}: {work_name}\n\n"
-        text += f"ℹ️Детали заказа:\n • Курс: {year}\n • Предмет: {subject_name}\n • Номер ЛР: {work_id}\n • Название ЛР: {work_id_name}\n • Название архива/документа: {manual_file_name}"
-        text += ("\n\nCвяжитесь с менеджером для получения инструкций по оплате. "
-                 "Для этого нажмите 💬 Связаться с менеджером, после чего вас перекинет в личный чат с менеджером, "
-                "а затем отправьте идентификатор заказа.\n\n"
-                f"Ваш идентификатор заказа: <code>o{order_id}c{chat_id}</code>")
+        text = (f"📌 <b>Заказ № {order_id}:</b> {work_name}\n\n"
+        f"ℹ️Детали заказа:\n"
+        f" • <b>Курс:</b> {year}\n"
+        f" • <b>Предмет:</b> {subject_name}\n"
+        f" • <b>Номер ЛР:</b> {work_id}\n"
+        f" • <b>Название ЛР:</b> {work_id_name}\n"
+        f" • <b>Название архива/документа:</b> {manual_file_name}\n"
+        f" • <b>Стоимость оплаты:</b> <b><em>{price} р.</em></b>"
+        "\n\n❗Cвяжитесь с менеджером для получения инструкций по оплате. "
+        "Для этого нажмите 💬 Связаться с менеджером, после чего вас перекинет в личный чат с менеджером, "
+        "а затем отправьте идентификатор заказа.\n\n"
+        f"Ваш идентификатор заказа: <code>o{order_id}c{chat_id}</code>")
         markup.button(text="💬 Связаться с менеджером", url=f"https://t.me/{config.boss_username}")
 
         if manual_file_path != None:
@@ -129,12 +135,21 @@ def order_info_user(order_id, chat_id, year, subject_name, work, work_name, work
 
     if work == "sdo":
         platform, login, password = specific_data["platform"], specific_data["login"], specific_data["password"]
-        text = f"Заказ № {order_id}: {work_name}\n\n"
-        text += f"ℹ️Детали заказа:\n • Курс: {year}\n • Предмет: {subject_name}\n • Номер теста: {work_id}\n • Название теста: {work_id_name}\n • Платформа: {platform}\n • Логин: {login}\n • Пароль: {password}"
-        text += ("\n\nCвяжитесь с менеджером для получения инструкций по оплате. "
-                 "Для этого нажмите 💬 Связаться с менеджером, после чего вас перекинет в личный чат с менеджером, "
-                "а затем отправьте идентификатор заказа.\n\n"
-                f"Ваш идентификатор заказа: <code>o{order_id}c{chat_id}</code>")
+        text = (f"📌 <b>Заказ № {order_id}:</b> {work_name}\n\n"
+        f"ℹ️Детали заказа:\n"
+        f" • <b>Курс:</b> {year}\n"
+        f" • <b>Предмет:</b> {subject_name}\n"
+        f" • <b>Номер теста:</b> {work_id}\n"
+        f" • <b>Название теста:</b> {work_id_name}\n"
+        f" • <b>Платформа:</b> {platform}\n"
+        f" • <b>Логин:</b> {login}\n"
+        f" • <b>Пароль:</b> {password}\n"
+        f" • <b>Стоимость оплаты:</b> <b><em>{price} р.</em></b>"
+        "\n\n❗Cвяжитесь с исполнителем для получения инструкций по оплате. "
+        "Для этого нажмите 💬 Связаться с исполнителем, после чего вас перекинет в личный чат с исполнителем, "
+        "а затем отправьте идентификатор заказа.\n\n"
+        f"Ваш идентификатор заказа: <code>o{order_id}c{chat_id}</code>")
         markup.button(text="💬 Связаться с менеджером", url=f"https://t.me/{config.boss_username}")
 
+        file_path = None
     return [text, markup, file_path]
