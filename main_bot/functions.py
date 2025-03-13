@@ -87,6 +87,15 @@ def register_temporary_data(chat_id, argument_value_list, index_list, list):
 
     con.commit(); con.close()
 
+def delete_temporary_data(chat_id, index_list, list):
+    con, cur = connection()
+    for index in index_list:
+        if 0 <= index < len(list[chat_id].other_data.temporary_data):
+            del list[chat_id].other_data.temporary_data[index]
+
+    cur.execute(f'UPDATE public."Users" SET other_data = %s WHERE chat_id = %s', (list[chat_id].other_data.instance_to_json(), chat_id))
+    con.commit(); con.close()
+
 def retrieve_temporary_data(chat_id, index_list, list):
     values_list = []
     for index in index_list:
@@ -112,26 +121,6 @@ def import_in_object(object, key_list, value_list):
 
 def order_info_user(order_id, chat_id, year, subject_name, work, work_name, work_id, work_id_name, specific_data, price, markup):
     markup.button(text="🧹 Скрыть",  callback_data=classes.Callback_Data(key="delete", value=""))
-    if work == "lab":
-
-        manual_file_path, manual_file_name = specific_data["manual_file_path"], specific_data["manual_file_name"]
-        text = (f"📌 <b>Заказ № {order_id}:</b> {work_name}\n\n"
-        f"ℹ️Детали заказа:\n"
-        f" • <b>Курс:</b> {year}\n"
-        f" • <b>Предмет:</b> {subject_name}\n"
-        f" • <b>Номер ЛР:</b> {work_id}\n"
-        f" • <b>Название ЛР:</b> {work_id_name}\n"
-        f" • <b>Название архива/документа:</b> {manual_file_name}\n"
-        f" • <b>Стоимость оплаты:</b> <b><em>{price} р.</em></b>"
-        "\n\n❗Cвяжитесь с менеджером для получения инструкций по оплате. "
-        "Для этого нажмите 💬 Связаться с менеджером, после чего вас перекинет в личный чат с менеджером, "
-        "а затем отправьте идентификатор заказа.\n\n"
-        f"Ваш идентификатор заказа: <code>o{order_id}c{chat_id}</code>")
-        markup.button(text="💬 Связаться с менеджером", url=f"https://t.me/{config.boss_username}")
-
-        if manual_file_path != None:
-            file_path = manual_file_path
-        else: file_path = None
 
     if work == "sdo":
         platform, login, password = specific_data["platform"], specific_data["login"], specific_data["password"]
@@ -152,4 +141,48 @@ def order_info_user(order_id, chat_id, year, subject_name, work, work_name, work
         markup.button(text="💬 Связаться с менеджером", url=f"https://t.me/{config.boss_username}")
 
         file_path = None
+
+    elif work == "lab":
+
+        manual_file_path, manual_file_name = specific_data["manual_file_path"], specific_data["manual_file_name"]
+        text = (f"📌 <b>Заказ № {order_id}:</b> {work_name}\n\n"
+                f"ℹ️Детали заказа:\n"
+                f" • <b>Курс:</b> {year}\n"
+                f" • <b>Предмет:</b> {subject_name}\n"
+                f" • <b>Номер ЛР:</b> {work_id}\n"
+                f" • <b>Название ЛР:</b> {work_id_name}\n"
+                f" • <b>Название архива/документа:</b> {manual_file_name}\n"
+                f" • <b>Стоимость оплаты:</b> <b><em>{price} р.</em></b>"
+                "\n\n❗Cвяжитесь с менеджером для получения инструкций по оплате. "
+                "Для этого нажмите 💬 Связаться с менеджером, после чего вас перекинет в личный чат с менеджером, "
+                "а затем отправьте идентификатор заказа.\n\n"
+                f"Ваш идентификатор заказа: <code>o{order_id}c{chat_id}</code>")
+        markup.button(text="💬 Связаться с менеджером", url=f"https://t.me/{config.boss_username}")
+
+        if manual_file_path != None:
+            file_path = manual_file_path
+        else:
+            file_path = None
+
+    elif work == "kurs":
+
+        manual_file_path, manual_file_name = specific_data["manual_file_path"], specific_data["manual_file_name"]
+        text = (f"📌 <b>Заказ № {order_id}:</b> {work_name}\n\n"
+                f"ℹ️Детали заказа:\n"
+                f" • <b>Курс:</b> {year}\n"
+                f" • <b>Предмет:</b> {subject_name}\n"
+                f" • <b>Номер КР:</b> {work_id}\n"
+                f" • <b>Название КР:</b> {work_id_name}\n"
+                f" • <b>Название архива/документа:</b> {manual_file_name}\n"
+                f" • <b>Стоимость оплаты:</b> <b><em>{price} р.</em></b>"
+                "\n\n❗Cвяжитесь с менеджером для получения инструкций по оплате. "
+                "Для этого нажмите 💬 Связаться с менеджером, после чего вас перекинет в личный чат с менеджером, "
+                "а затем отправьте идентификатор заказа.\n\n"
+                f"Ваш идентификатор заказа: <code>o{order_id}c{chat_id}</code>")
+        markup.button(text="💬 Связаться с менеджером", url=f"https://t.me/{config.boss_username}")
+
+        if manual_file_path != None:
+            file_path = manual_file_path
+        else:
+            file_path = None
     return [text, markup, file_path]

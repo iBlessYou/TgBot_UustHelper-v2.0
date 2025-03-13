@@ -141,6 +141,22 @@ def delete_keys(object, key_list):
 def order_info(order_id, chat_id, username, year, subject_name, work, work_name, work_id, work_id_name, specific_data, price, markup):
     markup.button(text="Скрыть", callback_data=classes.Callback_Data(key="delete", value=""))
     file_path = None
+
+    if work == "sdo":
+        platform, login, password = specific_data["platform"], specific_data["login"], specific_data["password"]
+        text = (f"📌 <b>Заказ № {order_id}:</b> {work_name}\n\n"
+        f"ℹ️Детали заказа:\n"
+        f" • <b>chat_id:</b> {chat_id}\n"
+        f" • <b>username:</b> {username}\n"
+        f" • <b>Курс:</b> {year}\n"
+        f" • <b>Предмет:</b> {subject_name}\n"
+        f" • <b>Номер теста:</b> {work_id}\n"
+        f" • <b>Название теста:</b> {work_id_name}\n"
+        f" • <b>Платформа:</b> {platform}\n"
+        f" • <b>Логин:</b> {login}\n"
+        f" • <b>Пароль:</b> {password}\n"
+        f" • <b>Стоимость оплаты:</b> <b><em>{price}</b></em>")
+
     if work == "lab":
         manual_file_name = specific_data["manual_file_name"]
         if specific_data["manual_file_path"] != None:
@@ -155,22 +171,23 @@ def order_info(order_id, chat_id, username, year, subject_name, work, work_name,
         f" • <b>Номер ЛР:</b> {work_id}\n"
         f" • <b>Название ЛР:</b> {work_id_name}\n"
         f" • <b>Название архива/документа:</b> {manual_file_name}\n"
-        f" • <b>Стоимость оплаты:</b> {price}")
+        f" • <b>Стоимость оплаты:</b> <b><em>{price}</b></em>")
 
-    elif work == "sdo":
-        platform, login, password = specific_data["platform"], specific_data["login"], specific_data["password"]
+    if work == "kurs":
+        manual_file_name = specific_data["manual_file_name"]
+        if specific_data["manual_file_path"] != None:
+            file_path = specific_data["manual_file_path"]
+
         text = (f"📌 <b>Заказ № {order_id}:</b> {work_name}\n\n"
         f"ℹ️Детали заказа:\n"
         f" • <b>chat_id:</b> {chat_id}\n"
         f" • <b>username:</b> {username}\n"
         f" • <b>Курс:</b> {year}\n"
         f" • <b>Предмет:</b> {subject_name}\n"
-        f" • <b>Номер теста:</b> {work_id}\n"
-        f" • <b>Название теста:</b> {work_id_name}\n"
-        f" • <b>Платформа:</b> {platform}\n"
-        f" • <b>Логин:</b> {login}\n"
-        f" • <b>Пароль:</b> {password}\n"
-        f" • <b>Стоимость оплаты:</b> {price}")
+        f" • <b>Номер КР:</b> {work_id}\n"
+        f" • <b>Название КР:</b> {work_id_name}\n"
+        f" • <b>Название архива/документа:</b> {manual_file_name}\n"
+        f" • <b>Стоимость оплаты:</b> <b><em>{price}</b></em>")
 
     return [text, markup, file_path]
 

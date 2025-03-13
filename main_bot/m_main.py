@@ -18,6 +18,8 @@ bot = Bot(token=config.token_mainbot)
 reshalbot = Bot(token=config.token_reshalbot)
 dp = Dispatcher()
 
+MAX_FILE_SIZE = 5 * 1024**2
+
 users_list, = functions.import_lists_from_db(["users_list"])
 
 
@@ -242,11 +244,11 @@ async def callback(callback: CallbackQuery, callback_data=Callback_Data):
     for work in list(active_registry_list[year][subject].keys()):
         work_name = main_registry_list[year][subject]["work"][work]["work_name"]
         if active_registry_list[year][subject][work] != {}:
-            price_lab = []
+            price_work = []
             for work_id in list(active_registry_list[year][subject][work].keys()):
-                price_lab.append(main_registry_list[year][subject]["work"][work]["work_id"][work_id]["price"])
-            min_price = min(price_lab)
-            max_price = max(price_lab)
+                price_work.append(main_registry_list[year][subject]["work"][work]["work_id"][work_id]["price"])
+            min_price = min(price_work)
+            max_price = max(price_work)
             if min_price == max_price:
                 text += f"✅ {work_name}     <b><em>{min_price} р.</em></b>\n\n"
             else:
@@ -290,7 +292,7 @@ async def callback(callback: CallbackQuery, callback_data: Callback_Data):
 
     markup.button(text="➡️ Ввести персональные данные", callback_data=Callback_Data(key=f"order_sdo_1-1", value=f"{subject}_{work_id}"))
     markup.button(text="➡️ Перейти к оформлению", callback_data=Callback_Data(key=f"order_sdo_1-3", value=f"{subject}_{work_id}"))
-    markup.button(text="⬅️ Назад", callback_data=Callback_Data(key="services", value=f"{subject}")); markup.adjust(1)
+    markup.button(text="⬅️ Назад", callback_data=Callback_Data(key="work_ids", value=f"{subject}_sdo")); markup.adjust(1)
 
     await callback.message.edit_caption(caption=content.text_order_SDO, reply_markup=markup.as_markup())
 
@@ -441,7 +443,7 @@ async def callback(callback: CallbackQuery, callback_data: Callback_Data):
 
     markup = InlineKeyboardBuilder()
     markup.button(text="➡️ Перейти к оформлению", callback_data=Callback_Data(key="order_lab_1", value=f"{subject}_{work_id}"))
-    markup.button(text="⬅️ Назад", callback_data=Callback_Data(key="lab_ids", value=f"{subject}_lab")); markup.adjust(1)
+    markup.button(text="⬅️ Назад", callback_data=Callback_Data(key="work_ids", value=f"{subject}_lab")); markup.adjust(1)
 
     await callback.message.edit_caption(caption=content.text_order_lab, reply_markup=markup.as_markup())
 
@@ -474,43 +476,66 @@ async def callback(callback: CallbackQuery, state: FSMContext):
     markup = InlineKeyboardBuilder()
     markup.button(text="⬅️ Назад", callback_data=Callback_Data(key=f"order_lab_1", value=f"{subject}_{work_id}"))
 
-    await state.set_state(classes.Form.manual_file)
+    await state.set_state(classes.Form.manual_file_lab)
     await callback.message.edit_caption(caption=content.text_order_lab_1_1, reply_markup=markup.as_markup())
 
-@dp.message(classes.Form.manual_file, F.document)
+@dp.message(classes.Form.manual_file_lab, F.document)
 async def message(message: Message, state: FSMContext):
+    markup = InlineKeyboardBuilder()
+    if message.document.file_size > MAX_FILE_SIZE:
+        markup.button(text="🧹 Скрыть уведомление", callback_data=Callback_Data(key=f"delete", value=""))
+        await message.reply(content.text_order_lab_1_error, reply_markup=markup.as_markup())
 
-    subject, work_id = functions.retrieve_temporary_data(message.chat.id, [0, 1], users_list)
+    else:
+        subject, work_id = functions.retrieve_temporary_data(message.chat.id, [0, 1], users_list)
+        main_registry_list, = functions.import_lists_from_db(["main_registry_list"])
+        message_id = users_list[message.chat.id].other_data.message_id
+        manual_file_id = message.document.file_id
+        manual_file_name = message.document.file_name
+        year = users_list[message.chat.id].year
+        url = main_registry_list[year][subject]["work"]["lab"]["work_id"][work_id]["manual_link"]
+
+        markup.button(text="📖 Посмотреть", url=url)
+        markup.button(text="➡️ Далее", callback_data=Callback_Data(key=f"order_lab_2", value=""))
+        markup.button(text="🗑️ Удалить архив", callback_data=Callback_Data(key=f"order_lab_1", value=f"{subject}_{work_id}"))
+        markup.button(text="⬅️ Назад", callback_data=Callback_Data(key=f"order_lab", value=f"{subject}_{work_id}")); markup.adjust(1)
+
+        await message.delete()
+        await bot.edit_message_caption(caption=content.text_order_lab_1_(manual_file_name), chat_id=message.chat.id, message_id=message_id, reply_markup=markup.as_markup())
+
+        functions.register_temporary_data(message.chat.id, [manual_file_id, manual_file_name], [2, 3], users_list)
+
+
+@dp.callback_query(Callback_Data.filter(F.key=="order_lab_1_alt"))
+async def callback(callback: CallbackQuery, callback_data: Callback_Data):
+    subject, work_id, manual_file_id, manual_file_name = functions.retrieve_temporary_data(callback.message.chat.id, [0, 1, 2, 3], users_list)
     main_registry_list, = functions.import_lists_from_db(["main_registry_list"])
-    message_id = users_list[message.chat.id].other_data.message_id
-    manual_file_id = message.document.file_id
-    manual_file_name = message.document.file_name
-    year = users_list[message.chat.id].year
+    year = users_list[callback.message.chat.id].year
     url = main_registry_list[year][subject]["work"]["lab"]["work_id"][work_id]["manual_link"]
 
     markup = InlineKeyboardBuilder()
     markup.button(text="📖 Посмотреть", url=url)
     markup.button(text="➡️ Далее", callback_data=Callback_Data(key=f"order_lab_2", value=""))
     markup.button(text="🗑️ Удалить архив", callback_data=Callback_Data(key=f"order_lab_1", value=f"{subject}_{work_id}"))
-    markup.button(text="⬅️ Назад", callback_data=Callback_Data(key=f"order_lab", value=f"{subject}_{work_id}")); markup.adjust(1)
+    markup.button(text="⬅️ Назад", callback_data=Callback_Data(key=f"order_lab", value=f"{subject}_{work_id}"))
+    markup.adjust(1)
 
-    await message.delete()
-    await bot.edit_message_caption(caption=content.text_order_lab_1_(manual_file_name), chat_id=message.chat.id, message_id=message_id, reply_markup=markup.as_markup())
-
-    functions.register_temporary_data(message.chat.id, [manual_file_id, manual_file_name], [2, 3], users_list)
-
+    await callback.message.edit_caption(caption=content.text_order_lab_1_(manual_file_name), reply_markup=markup.as_markup())
+    functions.delete_temporary_data(callback.message.chat.id, [4], users_list)
 
 @dp.callback_query(Callback_Data.filter(F.key == "order_lab_2"))
 async def callback(callback: CallbackQuery, state: FSMContext):
-    subject, work_id = functions.retrieve_temporary_data(callback.message.chat.id, [0, 1], users_list)
 
     markup = InlineKeyboardBuilder()
-    markup.button(text="⬅️ Назад", callback_data=Callback_Data(key=f"order_lab_1", value=f"{subject}_{work_id}"))
-
-    await state.set_state(classes.Form.additional_info)
+    if len(users_list[callback.message.chat.id].other_data.temporary_data) == 2:
+        subject, work_id = functions.retrieve_temporary_data(callback.message.chat.id, [0, 1], users_list)
+        markup.button(text="⬅️ Назад", callback_data=Callback_Data(key="order_lab_1", value=f"{subject}_{work_id}"))
+    elif len(users_list[callback.message.chat.id].other_data.temporary_data) == 4:
+        markup.button(text="⬅️ Назад", callback_data=Callback_Data(key=f"order_lab_1_alt", value=""))
+    await state.set_state(classes.Form.additional_info_lab)
     await callback.message.edit_caption(caption=content.text_order_lab_2_1, reply_markup=markup.as_markup())
 
-@dp.message(classes.Form.additional_info, F.text)
+@dp.message(classes.Form.additional_info_lab, F.text)
 async def message(message: Message, state: FSMContext):
     main_registry_list, = functions.import_lists_from_db(["main_registry_list"])
     additional_info = message.text
@@ -521,17 +546,20 @@ async def message(message: Message, state: FSMContext):
     work_id_name = main_registry_list[year][subject]["work"]["lab"]["work_id"][work_id]["work_id_name"]
     price = main_registry_list[year][subject]["work"]["lab"]["work_id"][work_id]["price"]
 
+    markup = InlineKeyboardBuilder()
+    markup.button(text="✅ Сформировать заказ", callback_data=Callback_Data(key="order_lab_3", value=""))
+
     if len(users_list[message.chat.id].other_data.temporary_data) == 4:
         manual_file_id, manual_file_name = functions.retrieve_temporary_data(message.chat.id, [2, 3], users_list)
         functions.register_temporary_data(message.chat.id, [additional_info], [4], users_list)
+        markup.button(text="🔄 Изменить", callback_data=Callback_Data(key=f"order_lab_1_alt", value=""))
     else:
         manual_file_name = main_registry_list[year][subject]["work"]["lab"]["work_id"][work_id]["manual_link"]
         functions.register_temporary_data(message.chat.id, [additional_info], [2], users_list)
+        markup.button(text="🔄 Изменить", callback_data=Callback_Data(key="order_lab_1", value=f"{subject}_{work_id}"))
 
-    markup = InlineKeyboardBuilder()
-    markup.button(text="✅ Сформировать заказ", callback_data=Callback_Data(key="order_lab_3", value=""))
-    markup.button(text="🔄 Изменить", callback_data=Callback_Data(key=f"order_lab_1", value=f"{subject}_{work_id}"))
-    markup.button(text="❌ Отмена", callback_data=Callback_Data(key=f"order_lab=", value=f"{subject}_{work_id}")); markup.adjust(1, 2)
+    markup.button(text="❌ Отмена", callback_data=Callback_Data(key=f"order_lab", value=f"{subject}_{work_id}"))
+    markup.adjust(1, 2)
 
     await message.delete()
     await bot.edit_message_caption(caption=content.text_order_lab_2_2(year, subject_name, work_id_name, manual_file_name, additional_info, price), chat_id=message.chat.id, message_id=message_id, reply_markup=markup.as_markup(), parse_mode="html")
@@ -595,6 +623,197 @@ async def call(callback: CallbackQuery):
 
     await callback.message.edit_caption(caption=content.text_order_lab_3(order_id, chat_id, year, subject_name, work_id, work_id_name, manual_file_name, price), reply_markup=markup.as_markup(), parse_mode="html")
 
+#   КУРСОВЫЕ РАБОТЫ
+
+    #   ИНФО
+@dp.callback_query(Callback_Data.filter(F.key=="order_kurs"))
+async def callback(callback: CallbackQuery, callback_data: Callback_Data):
+
+    subject = callback_data.value.split("_")[0]
+    work_id = callback_data.value.split("_")[1]
+
+    markup = InlineKeyboardBuilder()
+    markup.button(text="➡️ Перейти к оформлению", callback_data=Callback_Data(key="order_kurs_1", value=f"{subject}_{work_id}"))
+    markup.button(text="⬅️ Назад", callback_data=Callback_Data(key="work_ids", value=f"{subject}_kurs")); markup.adjust(1)
+
+    await callback.message.edit_caption(caption=content.text_order_kurs, reply_markup=markup.as_markup())
+
+
+@dp.callback_query(Callback_Data.filter(F.key=="order_kurs_1"))
+async def callback(callback: CallbackQuery, callback_data: Callback_Data):
+
+    main_registry_list, = functions.import_lists_from_db(["main_registry_list"])
+    subject = callback_data.value.split("_")[0]
+    work_id = callback_data.value.split("_")[1]
+    year = users_list[callback.message.chat.id].year
+    url = main_registry_list[year][subject]["work"]["kurs"]["work_id"][work_id]["manual_link"]
+
+    markup = InlineKeyboardBuilder()
+    markup.button(text="📖 Посмотреть", url=url)
+    markup.button(text="➡️ Далее", callback_data=Callback_Data(key="order_kurs_2", value=""))
+    markup.button(text="📦 Добавить архив", callback_data=Callback_Data(key="order_kurs_1-1", value=""))
+    markup.button(text="⬅️ Назад", callback_data=Callback_Data(key=f"order_kurs", value=f"{subject}_{work_id}")); markup.adjust(1)
+
+    await callback.message.edit_caption(caption=content.text_order_kurs_1, reply_markup=markup.as_markup())
+
+    users_list[callback.message.chat.id].other_data.temporary_data = []
+    functions.register_temporary_data(callback.message.chat.id, [subject, work_id], [0, 1], users_list)
+
+@dp.callback_query(Callback_Data.filter(F.key == "order_kurs_1-1"))
+async def callback(callback: CallbackQuery, state: FSMContext):
+
+    subject, work_id = functions.retrieve_temporary_data(callback.message.chat.id, [0, 1], users_list)
+
+    markup = InlineKeyboardBuilder()
+    markup.button(text="⬅️ Назад", callback_data=Callback_Data(key=f"order_kurs_1", value=f"{subject}_{work_id}"))
+
+    await state.set_state(classes.Form.manual_file_kurs)
+    await callback.message.edit_caption(caption=content.text_order_kurs_1_1, reply_markup=markup.as_markup())
+
+@dp.message(classes.Form.manual_file_kurs, F.document)
+async def message(message: Message, state: FSMContext):
+    markup = InlineKeyboardBuilder()
+    if message.document.file_size > MAX_FILE_SIZE:
+        markup.button(text="🧹 Скрыть уведомление", callback_data=Callback_Data(key=f"delete", value=""))
+        await message.reply(content.text_order_kurs_1_error, reply_markup=markup.as_markup())
+
+    else:
+        subject, work_id = functions.retrieve_temporary_data(message.chat.id, [0, 1], users_list)
+        main_registry_list, = functions.import_lists_from_db(["main_registry_list"])
+        message_id = users_list[message.chat.id].other_data.message_id
+        manual_file_id = message.document.file_id
+        manual_file_name = message.document.file_name
+        year = users_list[message.chat.id].year
+        url = main_registry_list[year][subject]["work"]["kurs"]["work_id"][work_id]["manual_link"]
+
+        markup.button(text="📖 Посмотреть", url=url)
+        markup.button(text="➡️ Далее", callback_data=Callback_Data(key=f"order_kurs_2", value=""))
+        markup.button(text="🗑️ Удалить архив", callback_data=Callback_Data(key=f"order_kurs_1", value=f"{subject}_{work_id}"))
+        markup.button(text="⬅️ Назад", callback_data=Callback_Data(key=f"order_kurs", value=f"{subject}_{work_id}")); markup.adjust(1)
+
+        await message.delete()
+        await bot.edit_message_caption(caption=content.text_order_kurs_1_(manual_file_name), chat_id=message.chat.id, message_id=message_id, reply_markup=markup.as_markup())
+
+        functions.register_temporary_data(message.chat.id, [manual_file_id, manual_file_name], [2, 3], users_list)
+
+@dp.callback_query(Callback_Data.filter(F.key=="order_kurs_1_alt"))
+async def callback(callback: CallbackQuery, callback_data: Callback_Data):
+
+    subject, work_id, manual_file_id, manual_file_name = functions.retrieve_temporary_data(callback.message.chat.id, [0, 1, 2, 3], users_list)
+    main_registry_list, = functions.import_lists_from_db(["main_registry_list"])
+    year = users_list[callback.message.chat.id].year
+    url = main_registry_list[year][subject]["work"]["kurs"]["work_id"][work_id]["manual_link"]
+
+    markup = InlineKeyboardBuilder()
+    markup.button(text="📖 Посмотреть", url=url)
+    markup.button(text="➡️ Далее", callback_data=Callback_Data(key=f"order_kurs_2", value=""))
+    markup.button(text="🗑️ Удалить архив", callback_data=Callback_Data(key=f"order_kurs_1", value=f"{subject}_{work_id}"))
+    markup.button(text="⬅️ Назад", callback_data=Callback_Data(key=f"order_kurs", value=f"{subject}_{work_id}"))
+    markup.adjust(1)
+
+    await callback.message.edit_caption(caption=content.text_order_kurs_1_(manual_file_name), reply_markup=markup.as_markup())
+    functions.delete_temporary_data(callback.message.chat.id, [4], users_list)
+
+@dp.callback_query(Callback_Data.filter(F.key == "order_kurs_2"))
+async def callback(callback: CallbackQuery, state: FSMContext):
+
+    markup = InlineKeyboardBuilder()
+    if len(users_list[callback.message.chat.id].other_data.temporary_data) == 2:
+        subject, work_id = functions.retrieve_temporary_data(callback.message.chat.id, [0, 1], users_list)
+        markup.button(text="⬅️ Назад", callback_data=Callback_Data(key="order_kurs_1", value=f"{subject}_{work_id}"))
+    elif len(users_list[callback.message.chat.id].other_data.temporary_data) == 4:
+        markup.button(text="⬅️ Назад", callback_data=Callback_Data(key=f"order_kurs_1_alt", value=""))
+    await state.set_state(classes.Form.additional_info_kurs)
+    await callback.message.edit_caption(caption=content.text_order_kurs_2_1, reply_markup=markup.as_markup())
+
+@dp.message(classes.Form.additional_info_kurs, F.text)
+async def message(message: Message, state: FSMContext):
+    main_registry_list, = functions.import_lists_from_db(["main_registry_list"])
+    additional_info = message.text
+    message_id = users_list[message.chat.id].other_data.message_id
+    year = users_list[message.chat.id].year
+    subject, work_id = functions.retrieve_temporary_data(message.chat.id, [0, 1], users_list)
+    subject_name = main_registry_list[year][subject]["subject_name"]
+    work_id_name = main_registry_list[year][subject]["work"]["kurs"]["work_id"][work_id]["work_id_name"]
+    price = main_registry_list[year][subject]["work"]["kurs"]["work_id"][work_id]["price"]
+
+    markup = InlineKeyboardBuilder()
+    markup.button(text="✅ Сформировать заказ", callback_data=Callback_Data(key="order_kurs_3", value=""))
+
+    if len(users_list[message.chat.id].other_data.temporary_data) == 4:
+        manual_file_id, manual_file_name = functions.retrieve_temporary_data(message.chat.id, [2, 3], users_list)
+        functions.register_temporary_data(message.chat.id, [additional_info], [4], users_list)
+        markup.button(text="🔄 Изменить", callback_data=Callback_Data(key=f"order_kurs_1_alt", value=""))
+    else:
+        manual_file_name = main_registry_list[year][subject]["work"]["kurs"]["work_id"][work_id]["manual_link"]
+        functions.register_temporary_data(message.chat.id, [additional_info], [2], users_list)
+        markup.button(text="🔄 Изменить", callback_data=Callback_Data(key="order_kurs_1", value=f"{subject}_{work_id}"))
+
+    markup.button(text="❌ Отмена", callback_data=Callback_Data(key=f"order_kurs", value=f"{subject}_{work_id}")); markup.adjust(1, 2)
+
+    await message.delete()
+    await bot.edit_message_caption(caption=content.text_order_kurs_2_2(year, subject_name, work_id_name, manual_file_name, additional_info, price), chat_id=message.chat.id, message_id=message_id, reply_markup=markup.as_markup(), parse_mode="html")
+
+
+    #   ✅ СФОРМИРОВАТЬ ЗАКАЗ
+@dp.callback_query(Callback_Data.filter(F.key == "order_kurs_3"))
+async def call(callback: CallbackQuery):
+    main_registry_list, active_registry_list = functions.import_lists_from_db(["main_registry_list", "active_registry_list"])
+    chat_id = callback.message.chat.id
+    username, year = functions.retrieve_from_instance(users_list[chat_id], ["username", "year"])
+    subject, work_id = functions.retrieve_temporary_data(chat_id, [0, 1], users_list)
+    subject_name = main_registry_list[year][subject]["subject_name"]
+    work, work_name = "kurs", main_registry_list[year][subject]["work"]["kurs"]["work_name"]
+    work_id_name = main_registry_list[year][subject]["work"]["kurs"]["work_id"][work_id]["work_id_name"]
+    price = main_registry_list[year][subject]["work"]["kurs"]["work_id"][work_id]["price"]
+    executor_chat_id = main_registry_list[year][subject]["work"]["kurs"]["work_id"][work_id]["executors"][0]
+    main_registry_list[year][subject]["work"]["kurs"]["work_id"][work_id]["executors"].pop(0)
+    main_registry_list[year][subject]["work"]["kurs"]["work_id"][work_id]["executors"].append(executor_chat_id)
+    executor_username = db_connection.sql_SELECT('public."Executors"', "chat_id", executor_chat_id, ["username",])[0][0]
+
+
+    if len(users_list[callback.message.chat.id].other_data.temporary_data) == 5:
+        manual_file_id, manual_file_name = functions.retrieve_temporary_data(chat_id, [2, 3], users_list)
+        manual_file = await bot.get_file(manual_file_id)
+
+        manual_file_path = f"..\\storage\\documents\\Курсовые работы\\Методички\\{manual_file_name}"
+        #base_dir = os.path.dirname(os.path.abspath(__file__))
+        #storage_dir = os.path.join(base_dir, '..', 'storage', 'documents', 'Лабораторные работы', 'Методички')
+        #os.makedirs(storage_dir, exist_ok=True)
+        #manual_file_path = os.path.join(storage_dir, manual_file_name)
+        await bot.download_file(manual_file.file_path, manual_file_path)
+
+        additional_info, = functions.retrieve_temporary_data(chat_id, [4], users_list)
+    else:
+        manual_file_path = None
+        manual_file_name = main_registry_list[year][subject]["work"]["kurs"]["work_id"][work_id]["manual_link"]
+        additional_info, = functions.retrieve_temporary_data(chat_id, [2], users_list)
+
+    con, cur = functions.connection()
+    specific_info = {}
+    functions.import_in_object(specific_info, ["manual_file_path", "manual_file_name", "additional_info", "file_path"],
+                             [manual_file_path, manual_file_name, additional_info, None])
+
+    cur.execute('INSERT INTO public."Orders" (chat_id, username, year, subject, subject_name, work, work_name, work_id, work_id_name, specific_data, price, executor_chat_id, executor_username)'
+    'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)',(chat_id, username, year, subject, subject_name, work, work_name, work_id, work_id_name, json.dumps(specific_info), price, executor_chat_id, executor_username))
+    cur.execute('SELECT order_id FROM public."Orders" ORDER BY order_id DESC LIMIT 1;')
+    order_id = cur.fetchall()[0][0]
+    cur.execute(f'SELECT data FROM public."Sorted_Data" WHERE object = %s', ("orders",))
+    sorted_data = cur.fetchall()[0][0]
+    sorted_data["chat_id"][str(chat_id)].append(order_id)
+    sorted_data["executor_chat_id"][str(executor_chat_id)].append(order_id)
+    sorted_data["work"]["kurs"].append(order_id)
+    cur.execute('UPDATE public."Sorted_Data" SET data = %s WHERE object = %s', (json.dumps(sorted_data), "orders"))
+    cur.execute('UPDATE public."Registry_Data" SET data = %s WHERE registry_name = %s', (json.dumps(main_registry_list), "main_registry"))
+    con.commit(); con.close()
+
+    markup = InlineKeyboardBuilder()
+    markup.button(text="💬 Связаться с исполнителем", url=f"https://t.me/{executor_username}")
+    markup.button(text="🏠 На главную", callback_data=Callback_Data(key="main", value="")); markup.adjust(1)
+
+    await callback.message.edit_caption(caption=content.text_order_kurs_3(order_id, chat_id, year, subject_name, work_id, work_id_name, manual_file_name, price), reply_markup=markup.as_markup(), parse_mode="html")
+
+
 @dp.message(Command("user"))
 async def user_profile(message):
     await bot.send_message(message.chat.id, f"chat_id: {message.chat.id}\nusername: {message.from_user.username}\n"
@@ -603,24 +822,6 @@ async def user_profile(message):
 @dp.callback_query(Callback_Data.filter(F.key == "delete"))
 async def callback_data(callback: CallbackQuery):
     await bot.delete_message(callback.message.chat.id, callback.message.message_id)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 async def main():

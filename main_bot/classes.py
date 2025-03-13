@@ -15,12 +15,14 @@ class Callback_Data(CallbackData, prefix="my"):
 class Form(StatesGroup):
     login = State()
     password = State()
-    manual_file = State()
-    additional_info = State()
+    manual_file_lab = State()
+    manual_file_kurs = State()
+    additional_info_lab = State()
+    additional_info_kurs = State()
 
 class OrderHistoryFilters:
     def __init__(self):
-        self.work = ["sdo", "lab"]
+        self.work = ["sdo", "lab", "kurs"]
 
 class Config:
     order_history_filters = OrderHistoryFilters()

@@ -6,12 +6,16 @@
           "work_id": {
             "1": {
               "price": 200,
-              "executors": [],
+              "executors": [
+                7446688671
+              ],
               "work_id_name": "Авиационный комплекс"
             },
             "2": {
               "price": 200,
-              "executors": [],
+              "executors": [
+                7446688671
+              ],
               "work_id_name": "Современное состояние и перспективы развития мировой авиации"
             },
             "3": {
@@ -31,13 +35,18 @@
           "work_id": {
             "3": {
               "price": 1000,
-              "executors": [],
+              "executors": [
+                7446688671
+              ],
               "manual_link": "https://drive.google.com/open?id=12N7FF5oPjMsf0CQ6w4OOFElTsYU36-35&usp=drive_fs",
               "work_id_name": "Системы автоматизированного проектирования"
             },
             "1-2": {
               "price": 800,
-              "executors": [],
+              "executors": [
+                1328304100,
+                7446688671
+              ],
               "manual_link": "https://drive.google.com/drive/folders/12QUYDWOvOJgoG8l77mVD1KJq-5t6gCDg?usp=sharing",
               "work_id_name": "Управление жизненным циклом программного обеспечения"
             }
@@ -55,19 +64,25 @@
           "work_id": {
             "1": {
               "price": 1500,
-              "executors": [],
+              "executors": [
+                1328304100
+              ],
               "manual_link": "https://drive.google.com/drive/folders/1DBVt8sBM6rJs07REENwXj7lTd149I_vH?usp=sharing",
               "work_id_name": "Техническое задание"
             },
             "2": {
               "price": 1400,
-              "executors": [],
+              "executors": [
+                1328304100
+              ],
               "manual_link": "https://drive.google.com/drive/folders/1DAZVWQX8QsS1Sli0aycNOk7i5_O8v5Zj?usp=sharing",
               "work_id_name": "Построение структуры SADT-модели"
             },
             "3": {
               "price": 1300,
-              "executors": [],
+              "executors": [
+                1328304100
+              ],
               "manual_link": "https://drive.google.com/drive/folders/1D574zzHcZ4zem72jr7Ke-vbT93YW3Q3s?usp=sharing",
               "work_id_name": "Построение DFD-модели"
             }
@@ -124,6 +139,22 @@
         }
       },
       "subject_name": "Теоретические основы электротехники"
+    },
+    "OS": {
+      "work": {
+        "kurs": {
+          "work_id": {
+            "1": {
+              "work_id_name": "Проектирование гипотетической ОС",
+              "price": 4000,
+              "manual_link": "https://drive.google.com/open?id=1-bec9ubNcQNq6q1Uol0WZJZsiatPoHl8&usp=drive_fs",
+              "executors": []
+            }
+          },
+          "work_name": "Курсовая работа"
+        }
+      },
+      "subject_name": "Операционные системы"
     }
   }
 }

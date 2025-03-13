@@ -20,7 +20,7 @@ class Form(StatesGroup):
 
 class OrderHistoryFilters:
     def __init__(self):
-        self.work = ["sdo", "lab"]
+        self.work = ["sdo", "lab", "kurs"]
 
 class SelectedServices:
     def __init__(self):
@@ -31,7 +31,7 @@ class SelectedServices:
 
 class OrderFilters:
     def __init__(self):
-        self.work = ["sdo", "lab"]
+        self.work = ["sdo", "lab", "kurs"]
 
 class Config:
     selected_services = SelectedServices()

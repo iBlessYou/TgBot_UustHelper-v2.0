@@ -64,8 +64,6 @@ async def callback(callback: CallbackQuery):
     markup.button(text="Настроить фильтры", callback_data=Callback_Data(key="order_filters", value="none_none"))
     markup.button(text="Назад", callback_data=Callback_Data(key="main", value=""))
 
-    sorted_data = db_connection.sql_SELECT('public."Sorted_Data"', "object", "orders", ["data",])[0][0]
-
     for order_id in orders_list.keys():
         if orders_list[order_id].work in executors_list[callback.message.chat.id].config.order_filters.work:
             text = f"Заказ № {order_id}"
@@ -525,45 +523,7 @@ async def callback(callback: CallbackQuery):
                         "work_id_name"]
                     text += f"          {work_id}. {work_id_name}\n"
         text_application_form += text + "\n"
-    """
-    text_application_form += ("📌Выбранные услуги на добавление: ")
-    if executors_list[chat_id].config.selected_services.append == {}:
-        text_application_form += "нет услуг.\n\n"
-    else:
-        text_application_form += "\n\n"
-    for year in list(executors_list[chat_id].config.selected_services.append.keys()):
-        text = f"Курс {year}:\n"
-        for subject_id in list(executors_list[chat_id].config.selected_services.append[year].keys()):
-            subject_name = main_registry_list[year][subject_id]["subject_name"]
-            text += f"  • {subject_name}:\n"
-            for work in executors_list[chat_id].config.selected_services.append[year][subject_id]:
-                work_name = main_registry_list[year][subject_id]["work"][work]["work_name"]
-                text += f"      • {work_name}\n"
-                for work_id in executors_list[chat_id].config.selected_services.append[year][subject_id][work]:
-                    work_id_name = main_registry_list[year][subject_id]["work"][work]["work_id"][work_id][
-                        "work_id_name"]
-                    text += f"          {work_id}. {work_id_name}\n"
-        text_application_form += text + "\n"
 
-    text_application_form += ("📌Выбранные услуги на удаление: ")
-    if executors_list[chat_id].config.selected_services.remove == {}:
-        text_application_form += "нет услуг.\n\n"
-    else:
-        text_application_form += "\n\n"
-    for year in list(executors_list[chat_id].config.selected_services.remove.keys()):
-        text = f"Курс {year}:\n"
-        for subject_id in list(executors_list[chat_id].config.selected_services.remove[year].keys()):
-            subject_name = main_registry_list[year][subject_id]["subject_name"]
-            text += f"  • {subject_name}:\n"
-            for work in executors_list[chat_id].config.selected_services.remove[year][subject_id]:
-                work_name = main_registry_list[year][subject_id]["work"][work]["work_name"]
-                text += f"      • {work_name}\n"
-                for work_id in executors_list[chat_id].config.selected_services.remove[year][subject_id][work]:
-                    work_id_name = main_registry_list[year][subject_id]["work"][work]["work_id"][work_id][
-                        "work_id_name"]
-                    text += f"          {work_id}. {work_id_name}\n"
-        text_application_form += text + "\n"
-    """
     markup = InlineKeyboardBuilder()
     markup.button(text="Назад", callback_data=Callback_Data(key=f"services", value=""))
     markup.button(text="Обновить", callback_data=Callback_Data(key=f"services_form_update", value="")); markup.adjust(1)
