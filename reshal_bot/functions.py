@@ -155,7 +155,7 @@ def order_info(order_id, chat_id, username, year, subject_name, work, work_name,
         f" • <b>Платформа:</b> {platform}\n"
         f" • <b>Логин:</b> {login}\n"
         f" • <b>Пароль:</b> {password}\n"
-        f" • <b>Стоимость оплаты:</b> <b><em>{price}</b></em>")
+        f" • <b>Стоимость оплаты:</b> <b><em>{price}</em></b>")
 
     if work == "lab":
         manual_file_name = specific_data["manual_file_name"]
@@ -171,7 +171,7 @@ def order_info(order_id, chat_id, username, year, subject_name, work, work_name,
         f" • <b>Номер ЛР:</b> {work_id}\n"
         f" • <b>Название ЛР:</b> {work_id_name}\n"
         f" • <b>Название архива/документа:</b> {manual_file_name}\n"
-        f" • <b>Стоимость оплаты:</b> <b><em>{price}</b></em>")
+        f" • <b>Стоимость оплаты:</b> <b><em>{price}</em></b>")
 
     if work == "kurs":
         manual_file_name = specific_data["manual_file_name"]
@@ -187,7 +187,7 @@ def order_info(order_id, chat_id, username, year, subject_name, work, work_name,
         f" • <b>Номер КР:</b> {work_id}\n"
         f" • <b>Название КР:</b> {work_id_name}\n"
         f" • <b>Название архива/документа:</b> {manual_file_name}\n"
-        f" • <b>Стоимость оплаты:</b> <b><em>{price}</b></em>")
+        f" • <b>Стоимость оплаты:</b> <b><em>{price}</em></b>")
 
     return [text, markup, file_path]
 
