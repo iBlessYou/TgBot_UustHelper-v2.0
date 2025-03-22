@@ -1,125 +1,143 @@
 {
   "2": {
-    "PrL": {
-      "lab": {
-        "1-2": {
-          "price": 1300,
-          "executors": [],
-          "manual_link": "https://drive.google.com/drive/folders/1BRslERmlCC6Upr_o5MXiUvr6X0GJVZNd?usp=sharing",
-          "name": "Проектирование класса (псевдодинамический массив)"
-        },
-        "3": {
-          "price": 500,
-          "executors": [],
-          "manual_link": "https://drive.google.com/drive/folders/1BV46sUR3Sub1k5NsOiivKcB0g7iZ2lhU?usp=sharing",
-          "name": "Проектирование класса (динамический массив)"
-        },
-        "4": {
-          "price": 500,
-          "executors": [],
-          "manual_link": "https://drive.google.com/drive/folders/1BasSRIbo4fg1OGwOfr_f_J2eOYmBebv1?usp=sharing",
-          "name": "Операторные функции"
-        }
-      }
-    },
     "IP": {
       "lab": {
         "1": {
+          "name": "Kaspersky Endpoint Security",
           "price": 1000,
-          "executors": [],
-          "manual_link": "https://drive.google.com/drive/folders/1C1MWg-35t0HTUGA7mR6ccJpE9NpMK70u?usp=sharing",
-          "name": "Kaspersky Endpoint Security"
+          "executors": [
+            1328304100
+          ],
+          "manual_link": "https://drive.google.com/drive/folders/1C1MWg-35t0HTUGA7mR6ccJpE9NpMK70u?usp=sharing"
         },
         "2": {
+          "name": "Kaspersky Security Center",
           "price": 1100,
-          "executors": [],
-          "manual_link": "https://drive.google.com/drive/folders/1C20gudcb8lz8A-pQD_Dn6ccxVdEk19PS?usp=sharing",
-          "name": "Kaspersky Security Center"
+          "executors": [
+            1328304100
+          ],
+          "manual_link": "https://drive.google.com/drive/folders/1C20gudcb8lz8A-pQD_Dn6ccxVdEk19PS?usp=sharing"
         },
         "3": {
+          "name": "Криптон",
           "price": 1200,
           "executors": [],
-          "manual_link": "https://drive.google.com/drive/folders/1C6-PhNIjjwwIWq_PxTnLLE65B92o6EWE?usp=sharing",
-          "name": "Криптон"
+          "manual_link": "https://drive.google.com/drive/folders/1C6-PhNIjjwwIWq_PxTnLLE65B92o6EWE?usp=sharing"
         }
       }
     },
     "ML": {
       "lab": {
         "1": {
+          "name": "Обработка результатов прямых и косвенных измерений",
           "price": 600,
           "executors": [],
-          "manual_link": "https://drive.google.com/drive/folders/1CHKrXiFmRYCPyFiyVEuVc92A-_GQaubK?usp=sharing",
-          "name": "Обработка результатов прямых и косвенных измерений"
+          "manual_link": "https://drive.google.com/drive/folders/1CHKrXiFmRYCPyFiyVEuVc92A-_GQaubK?usp=sharing"
         }
       },
       "sdo": {
         "1": {
+          "name": "Основы метрологии и измерений",
           "price": 250,
-          "executors": [],
-          "name": "Основы метрологии и измерений"
+          "executors": [
+            1328304100
+          ]
         },
         "2": {
+          "name": "Результаты измерений и их обработка",
           "price": 250,
-          "executors": [],
-          "name": "Результаты измерений и их обработка"
+          "executors": [
+            1328304100
+          ]
         },
         "3": {
+          "name": "Погрешности измерений...",
           "price": 320,
-          "executors": [],
-          "name": "Погрешности измерений..."
+          "executors": [
+            1328304100
+          ]
         },
         "4": {
+          "name": "Измерение частоты и фазового сдвига",
           "price": 300,
-          "executors": [],
-          "name": "Измерение частоты и фазового сдвига"
+          "executors": []
         },
         "5": {
+          "name": "Измерение параметров электрических цепей",
           "price": 200,
-          "executors": [],
-          "name": "Измерение параметров электрических цепей"
+          "executors": []
         },
         "6": {
+          "name": "Измерение напряжения и силы тока",
           "price": 240,
-          "executors": [],
-          "name": "Измерение напряжения и силы тока"
+          "executors": []
         },
         "7": {
+          "name": "Измерение мощности",
           "price": 320,
-          "executors": [],
-          "name": "Измерение мощности"
+          "executors": []
         },
         "8": {
+          "name": "Метрология программного обеспечения",
           "price": 320,
-          "executors": [],
-          "name": "Метрология программного обеспечения"
+          "executors": []
         },
         "9": {
+          "name": "Оценка и анализ надежности программных систем",
           "price": 300,
-          "executors": [],
-          "name": "Оценка и анализ надежности программных систем"
+          "executors": []
         }
       }
     },
     "MO": {
       "lab": {
         "1": {
+          "name": "Целочисленное решение задач линейного программирования",
           "price": 1000,
           "executors": [],
-          "manual_link": "https://drive.google.com/drive/folders/1CXqel-cB8G5DtPVRuOh8J6_1pnXxDI_Y?usp=sharing",
-          "name": "Целочисленное решение задач линейного программирования"
+          "manual_link": "https://drive.google.com/drive/folders/1CXqel-cB8G5DtPVRuOh8J6_1pnXxDI_Y?usp=sharing"
         },
         "2": {
+          "name": "Решение транспортных задач линейного программирования",
           "price": 1100,
           "executors": [],
-          "manual_link": "https://drive.google.com/drive/folders/1CZ7oXZ68GmKVwSSrkjAxQqRZw9XRBMDs?usp=sharing",
-          "name": "Решение транспортных задач линейного программирования"
+          "manual_link": "https://drive.google.com/drive/folders/1CZ7oXZ68GmKVwSSrkjAxQqRZw9XRBMDs?usp=sharing"
         },
         "3": {
+          "name": "Численные методы решения задач одномерной оптимизации",
           "price": 900,
           "executors": [],
-          "manual_link": "https://drive.google.com/drive/folders/1CdJR_imiDc8Q2g3blY5aYemgGuEXnp0C?usp=sharing",
-          "name": "Численные методы решения задач одномерной оптимизации"
+          "manual_link": "https://drive.google.com/drive/folders/1CdJR_imiDc8Q2g3blY5aYemgGuEXnp0C?usp=sharing"
+        }
+      }
+    },
+    "PrL": {
+      "lab": {
+        "3": {
+          "name": "Проектирование класса (динамический массив)",
+          "price": 500,
+          "executors": [],
+          "manual_link": "https://drive.google.com/drive/folders/1BV46sUR3Sub1k5NsOiivKcB0g7iZ2lhU?usp=sharing"
+        },
+        "4": {
+          "name": "Операторные функции",
+          "price": 500,
+          "executors": [],
+          "manual_link": "https://drive.google.com/drive/folders/1BasSRIbo4fg1OGwOfr_f_J2eOYmBebv1?usp=sharing"
+        },
+        "1-2": {
+          "name": "Проектирование класса (псевдодинамический массив)",
+          "price": 1300,
+          "executors": [],
+          "manual_link": "https://drive.google.com/drive/folders/1BRslERmlCC6Upr_o5MXiUvr6X0GJVZNd?usp=sharing"
+        }
+      },
+      "kurs": {
+        "1": {
+          "price": 5000,
+          "executors": [],
+          "manual_link": "https://drive.google.com/drive/folders/1BRslERmlCC6Upr_o5MXiUvr6X0GJVZNd?usp=sharing",
+          "name": "Проектирование класса"
         }
       }
     }

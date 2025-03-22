@@ -5,4 +5,8 @@
 3. Активируем виртуальную среду source venv/bin/activate (деактивировать - deactivate)
 4. Создаем конфигурацию библиотек pip freeze > requirements.txt , распаковываем в рабочей директории pip install -r requirements.txt
 4. Копируем архив
-5. Запускаем исполняемые файлы
+5. Создаем фоновую сессию screen -S main_bot и запускаем исполняемый файл.
+Выход Ctrl+A+D,
+Завершение Ctrl+D
+Просмотр активных сессий screen -ls
+Подключение screen -r main_bot
