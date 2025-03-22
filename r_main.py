@@ -2,15 +2,15 @@ import asyncio
 import copy
 
 import config
-import content
+import reshal_bot.content as content
 import dictionary
-import functions
+import reshal_bot.functions as functions
 import db_connection
-import classes
+import reshal_bot.classes as classes
 import json
 import os
 
-from classes import Callback_Data
+from reshal_bot.classes import Callback_Data
 from aiogram import Bot, Dispatcher, F, types
 from aiogram.filters import CommandStart, Command
 from aiogram.types import Message, CallbackQuery, FSInputFile
@@ -321,7 +321,7 @@ async def callback(callback: CallbackQuery, callback_data: Callback_Data):
     markup = InlineKeyboardBuilder()
     lab_list = list(main_registry_list[year][subject][work].keys())
     for work_id in lab_list:
-        button_text = f"{work_id}. {main_registry_list[year][subject][work][work_id]["name"]}"
+        button_text = f"{work_id}. {main_registry_list[year][subject][work][work_id]['name']}"
         if data.new.get(year, {}).get(subject, {}).get(work, {}).get(work_id) == {}:
             button_text = f"✅ {button_text}"
         markup.button(text=button_text, callback_data=Callback_Data(key=f"select_services_work_id", value=f"{year}_{subject}_{work}_{work_id}"))
