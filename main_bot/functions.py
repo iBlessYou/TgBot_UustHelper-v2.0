@@ -3,7 +3,7 @@ import json
 import config
 
 from db_connection import connection
-import classes
+import main_bot.classes as classes
 def import_lists_from_db(values_list):
     con, cur = connection()
     lists = []

@@ -3,6 +3,7 @@ import copy
 
 import config
 import content
+import dictionary
 import functions
 import db_connection
 import classes
@@ -21,6 +22,7 @@ mainbot = Bot(token=config.token_mainbot)
 dp = Dispatcher()
 
 executors_list, = functions.import_lists_from_db(["executors_list"])
+
 
 # СТАРТ
 @dp.message(CommandStart())
@@ -244,7 +246,7 @@ async def callback(callback: CallbackQuery, callback_data: Callback_Data):
     markup = InlineKeyboardBuilder()
     try:
         for subject in main_registry_list[year].keys():
-            button_text = main_registry_list[year][subject]["subject_name"]
+            button_text = dictionary.dictionary["subject_name"][subject]
             markup.button(text=button_text, callback_data=Callback_Data(key="select_services_work", value=f"{year}_{subject}"))
 
     except Exception:
@@ -265,8 +267,8 @@ async def callback(callback: CallbackQuery, callback_data: Callback_Data):
     main_registry_list, = functions.import_lists_from_db(["main_registry_list"])
     
     markup = InlineKeyboardBuilder()
-    for work in main_registry_list[year][subject]["work"].keys():
-        button_text = main_registry_list[year][subject]["work"][work]["work_name"]
+    for work in main_registry_list[year][subject].keys():
+        button_text = dictionary.dictionary["work_name"][work]
         markup.button(text=button_text, callback_data=Callback_Data(key="select_services_work_id", value=f"{year}_{subject}_{work}_none"))
     markup.button(text="Назад", callback_data=Callback_Data(key="select_services_subject", value=f"{year}"))
     markup.adjust(1)
@@ -317,9 +319,9 @@ async def callback(callback: CallbackQuery, callback_data: Callback_Data):
         select_lab_callback()
 
     markup = InlineKeyboardBuilder()
-    lab_list = list(main_registry_list[year][subject]["work"][work]["work_id"].keys())
+    lab_list = list(main_registry_list[year][subject][work].keys())
     for work_id in lab_list:
-        button_text = f"{work_id}. {main_registry_list[year][subject]["work"][work]["work_id"][work_id]["work_id_name"]}"
+        button_text = f"{work_id}. {main_registry_list[year][subject][work][work_id]["name"]}"
         if data.new.get(year, {}).get(subject, {}).get(work, {}).get(work_id) == {}:
             button_text = f"✅ {button_text}"
         markup.button(text=button_text, callback_data=Callback_Data(key=f"select_services_work_id", value=f"{year}_{subject}_{work}_{work_id}"))
@@ -344,51 +346,16 @@ async def callback(callback: CallbackQuery):
     else: text_application_form += "\n\n"
     for year in list(executors_list[chat_id].config.selected_services.current.keys()):
         text = f"Курс {year}:\n"
-        for subject_id in list(executors_list[chat_id].config.selected_services.current[year].keys()):
-            subject_name = main_registry_list[year][subject_id]["subject_name"]
+        for subject in list(executors_list[chat_id].config.selected_services.current[year].keys()):
+            subject_name = dictionary.dictionary["subject_name"][subject]
             text += f"  • {subject_name}:\n"
-            for work in executors_list[chat_id].config.selected_services.current[year][subject_id]:
-                work_name = main_registry_list[year][subject_id]["work"][work]["work_name"]
+            for work in executors_list[chat_id].config.selected_services.current[year][subject]:
+                work_name = dictionary.dictionary["work_name"][work]
                 text += f"      • {work_name}:\n"
-                for work_id in executors_list[chat_id].config.selected_services.current[year][subject_id][work]:
-                    work_id_name = main_registry_list[year][subject_id]["work"][work]["work_id"][work_id]["work_id_name"]
+                for work_id in executors_list[chat_id].config.selected_services.current[year][subject][work]:
+                    work_id_name = main_registry_list[year][subject][work][work_id]["name"]
                     text += f"          {work_id}. {work_id_name}\n"
         text_application_form += text + "\n"
-
-    """
-    text_application_form += ("📌Выбранные услуги на добавление: ")
-    if executors_list[chat_id].config.selected_services.append == {}: text_application_form += "нет услуг.\n\n"
-    else: text_application_form += "\n\n"
-    for year in list(executors_list[chat_id].config.selected_services.append.keys()):
-        text = f"Курс {year}:\n"
-        for subject_id in list(executors_list[chat_id].config.selected_services.append[year].keys()):
-            subject_name = main_registry_list[year][subject_id]["subject_name"]
-            text += f"  • {subject_name}:\n"
-            for work in executors_list[chat_id].config.selected_services.append[year][subject_id]:
-                work_name = main_registry_list[year][subject_id]["work"][work]["work_name"]
-                text += f"      • {work_name}\n"
-                for work_id in executors_list[chat_id].config.selected_services.append[year][subject_id][work]:
-                    work_id_name = main_registry_list[year][subject_id]["work"][work]["work_id"][work_id]["work_id_name"]
-                    text += f"          {work_id}. {work_id_name}\n"
-        text_application_form += text + "\n"
-
-    text_application_form += ("📌Выбранные услуги на удаление: ")
-    if executors_list[chat_id].config.selected_services.remove == {}: text_application_form += "нет услуг.\n\n"
-    else: text_application_form += "\n\n"
-    for year in list(executors_list[chat_id].config.selected_services.remove.keys()):
-        text = f"Курс {year}:\n"
-        for subject_id in list(executors_list[chat_id].config.selected_services.remove[year].keys()):
-            subject_name = main_registry_list[year][subject_id]["subject_name"]
-            text += f"  • {subject_name}:\n"
-            for work in executors_list[chat_id].config.selected_services.remove[year][subject_id]:
-                work_name = main_registry_list[year][subject_id]["work"][work]["work_name"]
-                text += f"      • {work_name}\n"
-                for work_id in executors_list[chat_id].config.selected_services.remove[year][subject_id][work]:
-                    work_id_name = main_registry_list[year][subject_id]["work"][work]["work_id"][work_id][
-                        "work_id_name"]
-                    text += f"          {work_id}. {work_id_name}\n"
-        text_application_form += text + "\n"
-        """
 
     markup = InlineKeyboardBuilder()
     markup.button(text="Назад", callback_data=Callback_Data(key=f"services", value=""))
@@ -411,15 +378,14 @@ async def callback(callback: CallbackQuery):
         text_application_form += "\n\n"
     for year in list(executors_list[chat_id].config.selected_services.append.keys()):
         text = f"Курс {year}:\n"
-        for subject_id in list(executors_list[chat_id].config.selected_services.append[year].keys()):
-            subject_name = main_registry_list[year][subject_id]["subject_name"]
+        for subject in list(executors_list[chat_id].config.selected_services.append[year].keys()):
+            subject_name = dictionary.dictionary["subject_name"][subject]
             text += f"  • {subject_name}:\n"
-            for work in executors_list[chat_id].config.selected_services.append[year][subject_id]:
-                work_name = main_registry_list[year][subject_id]["work"][work]["work_name"]
+            for work in executors_list[chat_id].config.selected_services.append[year][subject]:
+                work_name = dictionary.dictionary["work_name"][work]
                 text += f"      • {work_name}\n"
-                for work_id in executors_list[chat_id].config.selected_services.append[year][subject_id][work]:
-                    work_id_name = main_registry_list[year][subject_id]["work"][work]["work_id"][work_id][
-                        "work_id_name"]
+                for work_id in executors_list[chat_id].config.selected_services.append[year][subject][work]:
+                    work_id_name = main_registry_list[year][subject][work][work_id]["name"]
                     text += f"          {work_id}. {work_id_name}\n"
         text_application_form += text + "\n"
 
@@ -441,14 +407,14 @@ async def callback(callback: CallbackQuery):
         text_application_form += "\n\n"
     for year in list(executors_list[chat_id].config.selected_services.remove.keys()):
         text = f"Курс {year}:\n"
-        for subject_id in list(executors_list[chat_id].config.selected_services.remove[year].keys()):
-            subject_name = main_registry_list[year][subject_id]["subject_name"]
+        for subject in list(executors_list[chat_id].config.selected_services.remove[year].keys()):
+            subject_name = dictionary.dictionary["subject_name"][subject]
             text += f"  • {subject_name}:\n"
-            for work in executors_list[chat_id].config.selected_services.remove[year][subject_id]:
-                work_name = main_registry_list[year][subject_id]["work"][work]["work_name"]
+            for work in executors_list[chat_id].config.selected_services.remove[year][subject]:
+                work_name = dictionary.dictionary["work_name"][work]
                 text += f"      • {work_name}\n"
-                for work_id in executors_list[chat_id].config.selected_services.remove[year][subject_id][work]:
-                    work_id_name = main_registry_list[year][subject_id]["work"][work]["work_id"][work_id][
+                for work_id in executors_list[chat_id].config.selected_services.remove[year][subject][work]:
+                    work_id_name = main_registry_list[year][subject][work][work_id][
                         "work_id_name"]
                     text += f"          {work_id}. {work_id_name}\n"
         text_application_form += text + "\n"
@@ -477,8 +443,8 @@ async def callback(callback: CallbackQuery):
         for subject in list(data.append[year].keys()):
             for work in list(data.append[year][subject].keys()):
                 for work_id in list(data.append[year][subject][work].keys()):
-                    main_registry_list[year][subject]["work"][work]["work_id"][work_id]["executors"].append(chat_id)
-                    if len(main_registry_list[year][subject]["work"][work]["work_id"][work_id]["executors"]) == 1:
+                    main_registry_list[year][subject][work][work_id]["executors"].append(chat_id)
+                    if len(main_registry_list[year][subject][work][work_id]["executors"]) == 1:
                         functions.check_keys(active_registry_list, [year, subject, work])
                         active_registry_list[year][subject][work][work_id] = {}
 
@@ -486,8 +452,8 @@ async def callback(callback: CallbackQuery):
         for subject in list(data.remove[year].keys()):
             for work in list(data.remove[year][subject].keys()):
                 for work_id in list(data.remove[year][subject][work].keys()):
-                    main_registry_list[year][subject]["work"][work]["work_id"][work_id]["executors"].remove(chat_id)
-                    if len(main_registry_list[year][subject]["work"][work]["work_id"][work_id]["executors"]) == 0:
+                    main_registry_list[year][subject][work][work_id]["executors"].remove(chat_id)
+                    if len(main_registry_list[year][subject][work][work_id]["executors"]) == 0:
                         del active_registry_list[year][subject][work][work_id]
                         functions.delete_keys(active_registry_list, [year, subject, work])
 
@@ -512,15 +478,14 @@ async def callback(callback: CallbackQuery):
         text_application_form += "\n\n"
     for year in list(executors_list[chat_id].config.selected_services.current.keys()):
         text = f"Курс {year}:\n"
-        for subject_id in list(executors_list[chat_id].config.selected_services.current[year].keys()):
-            subject_name = main_registry_list[year][subject_id]["subject_name"]
+        for subject in list(executors_list[chat_id].config.selected_services.current[year].keys()):
+            subject_name = dictionary.dictionary["subject_name"][subject]
             text += f"  • {subject_name}:\n"
-            for work in executors_list[chat_id].config.selected_services.current[year][subject_id]:
-                work_name = main_registry_list[year][subject_id]["work"][work]["work_name"]
+            for work in executors_list[chat_id].config.selected_services.current[year][subject]:
+                work_name = dictionary.dictionary["work_name"][work]
                 text += f"      • {work_name}\n"
-                for work_id in executors_list[chat_id].config.selected_services.current[year][subject_id][work]:
-                    work_id_name = main_registry_list[year][subject_id]["work"][work]["work_id"][work_id][
-                        "work_id_name"]
+                for work_id in executors_list[chat_id].config.selected_services.current[year][subject][work]:
+                    work_id_name = main_registry_list[year][subject][work][work_id]["name"]
                     text += f"          {work_id}. {work_id_name}\n"
         text_application_form += text + "\n"
 

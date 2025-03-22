@@ -1,13 +1,14 @@
 import asyncio
 import config
-import content
-import functions
+import main_bot.content as content
+import dictionary
+import main_bot.functions as functions
 import db_connection
-import classes
+import main_bot.classes as classes
 import json
 import os
 
-from classes import Callback_Data
+from main_bot.classes import Callback_Data
 from aiogram import Bot, Dispatcher, F, types
 from aiogram.filters import CommandStart, Command
 from aiogram.types import Message, CallbackQuery, FSInputFile
@@ -21,7 +22,6 @@ dp = Dispatcher()
 MAX_FILE_SIZE = 5 * 1024**2
 
 users_list, = functions.import_lists_from_db(["users_list"])
-
 
 #   СТАРТ
 @dp.message(CommandStart())
@@ -181,10 +181,10 @@ async def callback(callback: CallbackQuery, callback_data=Callback_Data):
         if not parameter.startswith("__"):
             for argument in getattr(filters, parameter):
                 if argument in getattr(data, parameter):
-                    argument_name = content.dictionary[argument]
+                    argument_name = dictionary.dictionary["work_name"][argument]
                     text = f"✅ {argument_name}"
                 else:
-                    argument_name = content.dictionary[argument]
+                    argument_name = dictionary.dictionary["work_name"][argument]
                     text = f"{argument_name}"
                 markup.button(text=text, callback_data=Callback_Data(key=f"order_history_filters", value=f"{parameter}_{argument}"))
     markup.adjust(1, 2)
@@ -224,7 +224,7 @@ async def callback(callback: CallbackQuery):
 
     if year in list(active_registry_list.keys()):
         for subject in list(active_registry_list[year].keys()):
-            button_text = main_registry_list[year][subject]["subject_name"]
+            button_text = dictionary.dictionary["subject_name"][subject]
             markup.button(text=button_text, callback_data=Callback_Data(key="services", value=f"{subject}"))
         markup.button(text="⬅️ Назад", callback_data=Callback_Data(key="main", value="")); markup.adjust(1)
         await callback.message.edit_caption(caption=content.text_subject, reply_markup=markup.as_markup())
@@ -242,11 +242,11 @@ async def callback(callback: CallbackQuery, callback_data=Callback_Data):
     markup = InlineKeyboardBuilder()
     text = "📌 Актуальные цены:\n\n"
     for work in list(active_registry_list[year][subject].keys()):
-        work_name = main_registry_list[year][subject]["work"][work]["work_name"]
+        work_name = dictionary.dictionary["work_name"][work]
         if active_registry_list[year][subject][work] != {}:
             price_work = []
             for work_id in list(active_registry_list[year][subject][work].keys()):
-                price_work.append(main_registry_list[year][subject]["work"][work]["work_id"][work_id]["price"])
+                price_work.append(main_registry_list[year][subject][work][work_id]["price"])
             min_price = min(price_work)
             max_price = max(price_work)
             if min_price == max_price:
@@ -270,8 +270,8 @@ async def callback(callback: CallbackQuery, callback_data: Callback_Data):
     markup = InlineKeyboardBuilder()
     text = "📌 Актуальные цены:\n\n"
     for work_id in list(active_registry_list[year][subject][work].keys()):
-        work_id_name = main_registry_list[year][subject]["work"][work]["work_id"][work_id]["work_id_name"]
-        price = main_registry_list[year][subject]["work"][work]["work_id"][work_id]["price"]
+        work_id_name = main_registry_list[year][subject][work][work_id]["name"]
+        price = main_registry_list[year][subject][work][work_id]["price"]
         text += f"✅ {work_id}. {work_id_name}     <b><em>{price} р.</em></b>\n\n"
         button_text = f"{work_id}. {work_id_name}"
         markup.button(text=button_text, callback_data=Callback_Data(key=f"order_{work}", value=f"{subject}_{work_id}"))
@@ -355,9 +355,9 @@ async def message(message: Message, state: FSMContext):
     message_id = users_list[message.chat.id].other_data.message_id
     year = users_list[message.chat.id].year
     subject, work_id, platform, login = functions.retrieve_temporary_data(message.chat.id, [0, 1, 2, 3], users_list)
-    subject_name = main_registry_list[year][subject]["subject_name"]
-    work_id_name = main_registry_list[year][subject]["work"]["sdo"]["work_id"][work_id]["work_id_name"]
-    price = main_registry_list[year][subject]["work"]["sdo"]["work_id"][work_id]["price"]
+    subject_name = dictionary.dictionary["subject_name"][subject]
+    work_id_name = main_registry_list[year][subject]["sdo"][work_id]["name"]
+    price = main_registry_list[year][subject]["sdo"][work_id]["price"]
     password = message.text
 
     markup = InlineKeyboardBuilder()
@@ -378,9 +378,9 @@ async def callback(callback: CallbackQuery, callback_data: Callback_Data):
     year = users_list[callback.message.chat.id].year
     subject, work_id = callback_data.value.split("_")[0], callback_data.value.split("_")[1]
     platform, login, password = None, None, None
-    subject_name = main_registry_list[year][subject]["subject_name"]
-    work_id_name = main_registry_list[year][subject]["work"]["sdo"]["work_id"][work_id]["work_id_name"]
-    price = main_registry_list[year][subject]["work"]["sdo"]["work_id"][work_id]["price"]
+    subject_name = dictionary.dictionary["subject_name"][subject]
+    work_id_name = main_registry_list[year][subject]["sdo"][work_id]["name"]
+    price = main_registry_list[year][subject]["sdo"][work_id]["price"]
 
     markup = InlineKeyboardBuilder()
     markup.button(text="✅ Сформировать заказ", callback_data=Callback_Data(key=f"order_sdo_3", value=""))
@@ -399,13 +399,13 @@ async def callback(callback: CallbackQuery):
     chat_id = callback.message.chat.id
     username, year = functions.retrieve_from_instance(users_list[chat_id], ["username", "year"])
     subject, work_id, platform, login, password = functions.retrieve_temporary_data(chat_id, [0, 1, 2, 3, 4], users_list)
-    subject_name = main_registry_list[year][subject]["subject_name"]
-    work, work_name = "sdo", main_registry_list[year][subject]["work"]["sdo"]["work_name"]
-    work_id_name = main_registry_list[year][subject]["work"]["sdo"]["work_id"][work_id]["work_id_name"]
-    price = main_registry_list[year][subject]["work"]["sdo"]["work_id"][work_id]["price"]
-    executor_chat_id = main_registry_list[year][subject]["work"]["sdo"]["work_id"][work_id]["executors"][0]
-    main_registry_list[year][subject]["work"]["sdo"]["work_id"][work_id]["executors"].pop(0)
-    main_registry_list[year][subject]["work"]["sdo"]["work_id"][work_id]["executors"].append(executor_chat_id)
+    subject_name = dictionary.dictionary["subject_name"][subject]
+    work, work_name = "sdo", dictionary.dictionary["work_name"]["sdo"]
+    work_id_name = main_registry_list[year][subject]["sdo"][work_id]["name"]
+    price = main_registry_list[year][subject]["sdo"][work_id]["price"]
+    executor_chat_id = main_registry_list[year][subject]["sdo"][work_id]["executors"][0]
+    main_registry_list[year][subject]["sdo"][work_id]["executors"].pop(0)
+    main_registry_list[year][subject]["sdo"][work_id]["executors"].append(executor_chat_id)
     executor_username = db_connection.sql_SELECT('public."Executors"', "chat_id", executor_chat_id, ["username", ])[0][0]
 
     con, cur = functions.connection()
@@ -455,7 +455,7 @@ async def callback(callback: CallbackQuery, callback_data: Callback_Data):
     subject = callback_data.value.split("_")[0]
     work_id = callback_data.value.split("_")[1]
     year = users_list[callback.message.chat.id].year
-    url = main_registry_list[year][subject]["work"]["lab"]["work_id"][work_id]["manual_link"]
+    url = main_registry_list[year][subject]["lab"][work_id]["manual_link"]
 
     markup = InlineKeyboardBuilder()
     markup.button(text="📖 Посмотреть", url=url)
@@ -493,7 +493,7 @@ async def message(message: Message, state: FSMContext):
         manual_file_id = message.document.file_id
         manual_file_name = message.document.file_name
         year = users_list[message.chat.id].year
-        url = main_registry_list[year][subject]["work"]["lab"]["work_id"][work_id]["manual_link"]
+        url = main_registry_list[year][subject]["lab"][work_id]["manual_link"]
 
         markup.button(text="📖 Посмотреть", url=url)
         markup.button(text="➡️ Далее", callback_data=Callback_Data(key=f"order_lab_2", value=""))
@@ -511,7 +511,7 @@ async def callback(callback: CallbackQuery, callback_data: Callback_Data):
     subject, work_id, manual_file_id, manual_file_name = functions.retrieve_temporary_data(callback.message.chat.id, [0, 1, 2, 3], users_list)
     main_registry_list, = functions.import_lists_from_db(["main_registry_list"])
     year = users_list[callback.message.chat.id].year
-    url = main_registry_list[year][subject]["work"]["lab"]["work_id"][work_id]["manual_link"]
+    url = main_registry_list[year][subject]["lab"][work_id]["manual_link"]
 
     markup = InlineKeyboardBuilder()
     markup.button(text="📖 Посмотреть", url=url)
@@ -542,9 +542,9 @@ async def message(message: Message, state: FSMContext):
     message_id = users_list[message.chat.id].other_data.message_id
     year = users_list[message.chat.id].year
     subject, work_id = functions.retrieve_temporary_data(message.chat.id, [0, 1], users_list)
-    subject_name = main_registry_list[year][subject]["subject_name"]
-    work_id_name = main_registry_list[year][subject]["work"]["lab"]["work_id"][work_id]["work_id_name"]
-    price = main_registry_list[year][subject]["work"]["lab"]["work_id"][work_id]["price"]
+    subject_name = dictionary.dictionary["subject_name"][subject]
+    work_id_name = main_registry_list[year][subject]["lab"][work_id]["name"]
+    price = main_registry_list[year][subject]["lab"][work_id]["price"]
 
     markup = InlineKeyboardBuilder()
     markup.button(text="✅ Сформировать заказ", callback_data=Callback_Data(key="order_lab_3", value=""))
@@ -554,7 +554,7 @@ async def message(message: Message, state: FSMContext):
         functions.register_temporary_data(message.chat.id, [additional_info], [4], users_list)
         markup.button(text="🔄 Изменить", callback_data=Callback_Data(key=f"order_lab_1_alt", value=""))
     else:
-        manual_file_name = main_registry_list[year][subject]["work"]["lab"]["work_id"][work_id]["manual_link"]
+        manual_file_name = main_registry_list[year][subject]["lab"][work_id]["manual_link"]
         functions.register_temporary_data(message.chat.id, [additional_info], [2], users_list)
         markup.button(text="🔄 Изменить", callback_data=Callback_Data(key="order_lab_1", value=f"{subject}_{work_id}"))
 
@@ -572,13 +572,13 @@ async def call(callback: CallbackQuery):
     chat_id = callback.message.chat.id
     username, year = functions.retrieve_from_instance(users_list[chat_id], ["username", "year"])
     subject, work_id = functions.retrieve_temporary_data(chat_id, [0, 1], users_list)
-    subject_name = main_registry_list[year][subject]["subject_name"]
-    work, work_name = "lab", main_registry_list[year][subject]["work"]["lab"]["work_name"]
-    work_id_name = main_registry_list[year][subject]["work"]["lab"]["work_id"][work_id]["work_id_name"]
-    price = main_registry_list[year][subject]["work"]["lab"]["work_id"][work_id]["price"]
-    executor_chat_id = main_registry_list[year][subject]["work"]["lab"]["work_id"][work_id]["executors"][0]
-    main_registry_list[year][subject]["work"]["lab"]["work_id"][work_id]["executors"].pop(0)
-    main_registry_list[year][subject]["work"]["lab"]["work_id"][work_id]["executors"].append(executor_chat_id)
+    subject_name = dictionary.dictionary["subject_name"][subject]
+    work, work_name = "lab", dictionary.dictionary["work_name"]["lab"]
+    work_id_name = main_registry_list[year][subject]["lab"][work_id]["name"]
+    price = main_registry_list[year][subject]["lab"][work_id]["price"]
+    executor_chat_id = main_registry_list[year][subject]["lab"][work_id]["executors"][0]
+    main_registry_list[year][subject]["lab"][work_id]["executors"].pop(0)
+    main_registry_list[year][subject]["lab"][work_id]["executors"].append(executor_chat_id)
     executor_username = db_connection.sql_SELECT('public."Executors"', "chat_id", executor_chat_id, ["username",])[0][0]
 
 
@@ -586,7 +586,7 @@ async def call(callback: CallbackQuery):
         manual_file_id, manual_file_name = functions.retrieve_temporary_data(chat_id, [2, 3], users_list)
         manual_file = await bot.get_file(manual_file_id)
 
-        manual_file_path = f"..\\storage\\documents\\Лабораторные работы\\Методички\\{manual_file_name}"
+        manual_file_path = f".\\storage\\documents\\Лабораторные работы\\Методички\\{manual_file_name}"
         #base_dir = os.path.dirname(os.path.abspath(__file__))
         #storage_dir = os.path.join(base_dir, '..', 'storage', 'documents', 'Лабораторные работы', 'Методички')
         #os.makedirs(storage_dir, exist_ok=True)
@@ -596,7 +596,7 @@ async def call(callback: CallbackQuery):
         additional_info, = functions.retrieve_temporary_data(chat_id, [4], users_list)
     else:
         manual_file_path = None
-        manual_file_name = main_registry_list[year][subject]["work"]["lab"]["work_id"][work_id]["manual_link"]
+        manual_file_name = main_registry_list[year][subject]["lab"][work_id]["manual_link"]
         additional_info, = functions.retrieve_temporary_data(chat_id, [2], users_list)
 
     con, cur = functions.connection()
@@ -646,7 +646,7 @@ async def callback(callback: CallbackQuery, callback_data: Callback_Data):
     subject = callback_data.value.split("_")[0]
     work_id = callback_data.value.split("_")[1]
     year = users_list[callback.message.chat.id].year
-    url = main_registry_list[year][subject]["work"]["kurs"]["work_id"][work_id]["manual_link"]
+    url = main_registry_list[year][subject]["kurs"][work_id]["manual_link"]
 
     markup = InlineKeyboardBuilder()
     markup.button(text="📖 Посмотреть", url=url)
@@ -684,7 +684,7 @@ async def message(message: Message, state: FSMContext):
         manual_file_id = message.document.file_id
         manual_file_name = message.document.file_name
         year = users_list[message.chat.id].year
-        url = main_registry_list[year][subject]["work"]["kurs"]["work_id"][work_id]["manual_link"]
+        url = main_registry_list[year][subject]["kurs"][work_id]["manual_link"]
 
         markup.button(text="📖 Посмотреть", url=url)
         markup.button(text="➡️ Далее", callback_data=Callback_Data(key=f"order_kurs_2", value=""))
@@ -702,7 +702,7 @@ async def callback(callback: CallbackQuery, callback_data: Callback_Data):
     subject, work_id, manual_file_id, manual_file_name = functions.retrieve_temporary_data(callback.message.chat.id, [0, 1, 2, 3], users_list)
     main_registry_list, = functions.import_lists_from_db(["main_registry_list"])
     year = users_list[callback.message.chat.id].year
-    url = main_registry_list[year][subject]["work"]["kurs"]["work_id"][work_id]["manual_link"]
+    url = main_registry_list[year][subject]["kurs"][work_id]["manual_link"]
 
     markup = InlineKeyboardBuilder()
     markup.button(text="📖 Посмотреть", url=url)
@@ -733,9 +733,9 @@ async def message(message: Message, state: FSMContext):
     message_id = users_list[message.chat.id].other_data.message_id
     year = users_list[message.chat.id].year
     subject, work_id = functions.retrieve_temporary_data(message.chat.id, [0, 1], users_list)
-    subject_name = main_registry_list[year][subject]["subject_name"]
-    work_id_name = main_registry_list[year][subject]["work"]["kurs"]["work_id"][work_id]["work_id_name"]
-    price = main_registry_list[year][subject]["work"]["kurs"]["work_id"][work_id]["price"]
+    subject_name = dictionary.dictionary["subject_name"][subject]
+    work_id_name = main_registry_list[year][subject]["kurs"][work_id]["name"]
+    price = main_registry_list[year][subject]["kurs"][work_id]["price"]
 
     markup = InlineKeyboardBuilder()
     markup.button(text="✅ Сформировать заказ", callback_data=Callback_Data(key="order_kurs_3", value=""))
@@ -745,7 +745,7 @@ async def message(message: Message, state: FSMContext):
         functions.register_temporary_data(message.chat.id, [additional_info], [4], users_list)
         markup.button(text="🔄 Изменить", callback_data=Callback_Data(key=f"order_kurs_1_alt", value=""))
     else:
-        manual_file_name = main_registry_list[year][subject]["work"]["kurs"]["work_id"][work_id]["manual_link"]
+        manual_file_name = main_registry_list[year][subject]["kurs"][work_id]["manual_link"]
         functions.register_temporary_data(message.chat.id, [additional_info], [2], users_list)
         markup.button(text="🔄 Изменить", callback_data=Callback_Data(key="order_kurs_1", value=f"{subject}_{work_id}"))
 
@@ -762,13 +762,13 @@ async def call(callback: CallbackQuery):
     chat_id = callback.message.chat.id
     username, year = functions.retrieve_from_instance(users_list[chat_id], ["username", "year"])
     subject, work_id = functions.retrieve_temporary_data(chat_id, [0, 1], users_list)
-    subject_name = main_registry_list[year][subject]["subject_name"]
-    work, work_name = "kurs", main_registry_list[year][subject]["work"]["kurs"]["work_name"]
-    work_id_name = main_registry_list[year][subject]["work"]["kurs"]["work_id"][work_id]["work_id_name"]
-    price = main_registry_list[year][subject]["work"]["kurs"]["work_id"][work_id]["price"]
-    executor_chat_id = main_registry_list[year][subject]["work"]["kurs"]["work_id"][work_id]["executors"][0]
-    main_registry_list[year][subject]["work"]["kurs"]["work_id"][work_id]["executors"].pop(0)
-    main_registry_list[year][subject]["work"]["kurs"]["work_id"][work_id]["executors"].append(executor_chat_id)
+    subject_name = dictionary.dictionary["subject_name"][subject]
+    work, work_name = "kurs", dictionary.dictionary["work_name"]["kurs"]
+    work_id_name = main_registry_list[year][subject]["kurs"][work_id]["name"]
+    price = main_registry_list[year][subject]["kurs"][work_id]["price"]
+    executor_chat_id = main_registry_list[year][subject]["kurs"][work_id]["executors"][0]
+    main_registry_list[year][subject]["kurs"][work_id]["executors"].pop(0)
+    main_registry_list[year][subject]["kurs"][work_id]["executors"].append(executor_chat_id)
     executor_username = db_connection.sql_SELECT('public."Executors"', "chat_id", executor_chat_id, ["username",])[0][0]
 
 
@@ -776,7 +776,7 @@ async def call(callback: CallbackQuery):
         manual_file_id, manual_file_name = functions.retrieve_temporary_data(chat_id, [2, 3], users_list)
         manual_file = await bot.get_file(manual_file_id)
 
-        manual_file_path = f"..\\storage\\documents\\Курсовые работы\\Методички\\{manual_file_name}"
+        manual_file_path = f".\\storage\\documents\\Курсовые работы\\Методички\\{manual_file_name}"
         #base_dir = os.path.dirname(os.path.abspath(__file__))
         #storage_dir = os.path.join(base_dir, '..', 'storage', 'documents', 'Лабораторные работы', 'Методички')
         #os.makedirs(storage_dir, exist_ok=True)
@@ -786,7 +786,7 @@ async def call(callback: CallbackQuery):
         additional_info, = functions.retrieve_temporary_data(chat_id, [4], users_list)
     else:
         manual_file_path = None
-        manual_file_name = main_registry_list[year][subject]["work"]["kurs"]["work_id"][work_id]["manual_link"]
+        manual_file_name = main_registry_list[year][subject]["kurs"][work_id]["manual_link"]
         additional_info, = functions.retrieve_temporary_data(chat_id, [2], users_list)
 
     con, cur = functions.connection()
@@ -823,6 +823,10 @@ async def user_profile(message):
 async def callback_data(callback: CallbackQuery):
     await bot.delete_message(callback.message.chat.id, callback.message.message_id)
 
+
+@dp.message(Command("photo"))
+async def user_profile(message):
+    await message.answer_photo()
 
 async def main():
     await dp.start_polling(bot)

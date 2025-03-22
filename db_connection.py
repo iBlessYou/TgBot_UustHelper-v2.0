@@ -1,3 +1,5 @@
+import os
+
 import config
 from psycopg2 import connect
 

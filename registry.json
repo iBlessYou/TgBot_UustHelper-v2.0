@@ -1,110 +1,127 @@
 {
   "2": {
     "PrL": {
-      "work": {
-        "lab": {
-          "work_id": {
-            "1-2": {
-              "price": 1300,
-              "executors": [],
-              "manual_link": "https://drive.google.com/drive/folders/1BEapQJ_0nmIoDMc0RHq9RqshjDmSP2oM?usp=sharing",
-              "work_id_name": "Проектирование класса"
-            }
-          },
-          "work_name": "Лабораторная работа"
-        }
-      },
-      "subject_name": "Операционные системы"
-    },
-    "PRO": {
-      "work": {
-        "lab": {
-          "work_id": {
-            "1": {
-              "price": 1500,
-              "executors": [
-                1328304100
-              ],
-              "manual_link": "https://drive.google.com/drive/folders/1DBVt8sBM6rJs07REENwXj7lTd149I_vH?usp=sharing",
-              "work_id_name": "Техническое задание"
-            },
-            "2": {
-              "price": 1400,
-              "executors": [
-                1328304100
-              ],
-              "manual_link": "https://drive.google.com/drive/folders/1DAZVWQX8QsS1Sli0aycNOk7i5_O8v5Zj?usp=sharing",
-              "work_id_name": "Построение структуры SADT-модели"
-            },
-            "3": {
-              "price": 1300,
-              "executors": [
-                1328304100
-              ],
-              "manual_link": "https://drive.google.com/drive/folders/1D574zzHcZ4zem72jr7Ke-vbT93YW3Q3s?usp=sharing",
-              "work_id_name": "Построение DFD-модели"
-            }
-          },
-          "work_name": "Лабораторная работа"
-        }
-      },
-      "subject_name": "Программирование"
-    },
-    "TOE": {
-      "work": {
-        "lab": {
-          "work_id": {
-            "1": {
-              "price": 900,
-              "executors": [],
-              "manual_link": "https://drive.google.com/drive/folders/1CNFBS8-cz--2TOFyU0Vak6UmlNL_mUBZ?usp=sharing",
-              "work_id_name": "Исследование разветвленной линейной электрической цепи..."
-            },
-            "4": {
-              "price": 800,
-              "executors": [
-                1328304100
-              ],
-              "manual_link": "https://drive.google.com/drive/folders/1CLOIyVRjyWjmMlrvW8r1MOXM5iGHLbUt?usp=sharing",
-              "work_id_name": "Исследование резонанса напряжений"
-            },
-            "10": {
-              "price": 860,
-              "executors": [
-                1328304100
-              ],
-              "manual_link": "https://drive.google.com/drive/folders/1D574zzHcZ4zem72jr7Ke-vbT93YW3Q3s?usp=sharing",
-              "work_id_name": "Исследование переходных процессов при разряде конденсатора..."
-            }
-          },
-          "work_name": "Лабораторная работа"
+      "lab": {
+        "1-2": {
+          "price": 1300,
+          "executors": [],
+          "manual_link": "https://drive.google.com/drive/folders/1BRslERmlCC6Upr_o5MXiUvr6X0GJVZNd?usp=sharing",
+          "name": "Проектирование класса (псевдодинамический массив)"
         },
-        "sdo": {
-          "work_id": {
-            "1": {
-              "price": 250,
-              "executors": [],
-              "work_id_name": "Исследование разветвленной линейной электрической цепи..."
-            },
-            "4": {
-              "price": 140,
-              "executors": [
-                1328304100
-              ],
-              "work_id_name": "Исследование резонанса напряжений"
-            },
-            "10": {
-              "price": 320,
-              "executors": [
-                1328304100
-              ],
-              "work_id_name": "Исследование переходных процессов при разряде конденсатора..."
-            }
-          },
-          "work_name": "Тест СДО"
+        "3": {
+          "price": 500,
+          "executors": [],
+          "manual_link": "https://drive.google.com/drive/folders/1BV46sUR3Sub1k5NsOiivKcB0g7iZ2lhU?usp=sharing",
+          "name": "Проектирование класса (динамический массив)"
+        },
+        "4": {
+          "price": 500,
+          "executors": [],
+          "manual_link": "https://drive.google.com/drive/folders/1BasSRIbo4fg1OGwOfr_f_J2eOYmBebv1?usp=sharing",
+          "name": "Операторные функции"
+        }
+      }
+    },
+    "IP": {
+      "lab": {
+        "1": {
+          "price": 1000,
+          "executors": [],
+          "manual_link": "https://drive.google.com/drive/folders/1C1MWg-35t0HTUGA7mR6ccJpE9NpMK70u?usp=sharing",
+          "name": "Kaspersky Endpoint Security"
+        },
+        "2": {
+          "price": 1100,
+          "executors": [],
+          "manual_link": "https://drive.google.com/drive/folders/1C20gudcb8lz8A-pQD_Dn6ccxVdEk19PS?usp=sharing",
+          "name": "Kaspersky Security Center"
+        },
+        "3": {
+          "price": 1200,
+          "executors": [],
+          "manual_link": "https://drive.google.com/drive/folders/1C6-PhNIjjwwIWq_PxTnLLE65B92o6EWE?usp=sharing",
+          "name": "Криптон"
+        }
+      }
+    },
+    "ML": {
+      "lab": {
+        "1": {
+          "price": 600,
+          "executors": [],
+          "manual_link": "https://drive.google.com/drive/folders/1CHKrXiFmRYCPyFiyVEuVc92A-_GQaubK?usp=sharing",
+          "name": "Обработка результатов прямых и косвенных измерений"
         }
       },
-      "subject_name": "Теоретические основы электротехники"
+      "sdo": {
+        "1": {
+          "price": 250,
+          "executors": [],
+          "name": "Основы метрологии и измерений"
+        },
+        "2": {
+          "price": 250,
+          "executors": [],
+          "name": "Результаты измерений и их обработка"
+        },
+        "3": {
+          "price": 320,
+          "executors": [],
+          "name": "Погрешности измерений..."
+        },
+        "4": {
+          "price": 300,
+          "executors": [],
+          "name": "Измерение частоты и фазового сдвига"
+        },
+        "5": {
+          "price": 200,
+          "executors": [],
+          "name": "Измерение параметров электрических цепей"
+        },
+        "6": {
+          "price": 240,
+          "executors": [],
+          "name": "Измерение напряжения и силы тока"
+        },
+        "7": {
+          "price": 320,
+          "executors": [],
+          "name": "Измерение мощности"
+        },
+        "8": {
+          "price": 320,
+          "executors": [],
+          "name": "Метрология программного обеспечения"
+        },
+        "9": {
+          "price": 300,
+          "executors": [],
+          "name": "Оценка и анализ надежности программных систем"
+        }
+      }
+    },
+    "MO": {
+      "lab": {
+        "1": {
+          "price": 1000,
+          "executors": [],
+          "manual_link": "https://drive.google.com/drive/folders/1CXqel-cB8G5DtPVRuOh8J6_1pnXxDI_Y?usp=sharing",
+          "name": "Целочисленное решение задач линейного программирования"
+        },
+        "2": {
+          "price": 1100,
+          "executors": [],
+          "manual_link": "https://drive.google.com/drive/folders/1CZ7oXZ68GmKVwSSrkjAxQqRZw9XRBMDs?usp=sharing",
+          "name": "Решение транспортных задач линейного программирования"
+        },
+        "3": {
+          "price": 900,
+          "executors": [],
+          "manual_link": "https://drive.google.com/drive/folders/1CdJR_imiDc8Q2g3blY5aYemgGuEXnp0C?usp=sharing",
+          "name": "Численные методы решения задач одномерной оптимизации"
+        }
+      }
     }
   }
 }
